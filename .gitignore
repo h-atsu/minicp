@@ -1,0 +1,31 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+
+# Rust-generated files
+target/
+
+# Native Python extension built by maturin develop
+src/minicp/*.so
+src/minicp/*.pyd
+src/minicp/*.dylib
+
+# Editors and operating systems
+.DS_Store
+.idea/
+.vscode/
+
+# Local scratch files
+notebooks/tmp.py

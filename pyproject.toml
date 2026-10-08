@@ -1,0 +1,31 @@
+[project]
+name = "minicp"
+version = "0.1.0"
+description = "A small constraint programming solver built while learning MiniCP"
+readme = "README.md"
+authors = [
+    { name = "h-atsu", email = "jhuim08@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.maturin]
+module-name = "minicp._rust"
+python-packages = ["minicp"]
+python-source = "src"
+
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.rs" }, { file = "Cargo.toml" }, { file = "Cargo.lock" }]
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "maturin>=1.15.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.10",
+    "ty>=0.0.85",
+]
