@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+
 
 class StateManager:
     """Save and restore changes made to stateful integers.
@@ -65,3 +67,30 @@ class StateInt:
     def _restore(self, value: int) -> None:
         # Restoring must not create another trail entry.
         self._value = value
+
+
+class StateStack[T]:
+    """A stack whose logical size is restored with the search state.
+
+    Stored objects do not need to be copied. On restoration only the visible
+    prefix changes, which is sufficient for reversible listener lists.
+    """
+
+    def __init__(self, manager: StateManager) -> None:
+        self._items: list[T] = []
+        self._size = StateInt(manager, 0)
+
+    def append(self, item: T) -> None:
+        index = self._size.value
+        if index == len(self._items):
+            self._items.append(item)
+        else:
+            self._items[index] = item
+        self._size.set(index + 1)
+
+    def __len__(self) -> int:
+        return self._size.value
+
+    def __iter__(self) -> Iterator[T]:
+        for index in range(self._size.value):
+            yield self._items[index]
