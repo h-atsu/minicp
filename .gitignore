@@ -26,6 +26,3 @@ src/minicp/*.dylib
 .DS_Store
 .idea/
 .vscode/
-
-# Local scratch files
-notebooks/tmp.py

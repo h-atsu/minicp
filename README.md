@@ -71,6 +71,37 @@ assert domain.contains(4)
 assert domain.size == 5
 ```
 
+## Python版SolverとN-Queens
+
+Python版には、整数変数、制約伝播、深さ優先探索の最小実装があります。
+N-Queensでは各列の女王の行番号を整数変数で表し、同じ行と対角線を
+`not_equal`制約で除外します。
+
+```python
+from minicp.examples.n_queens import solve_n_queens
+
+solutions, statistics = solve_n_queens(8)
+
+assert len(solutions) == 92
+print(solutions[0])
+print(statistics)
+```
+
+モデルの構築と探索を分けて確認することもできます。
+
+```python
+from minicp import DFSearch
+from minicp.examples.n_queens import build_n_queens, first_unfixed
+
+solver, queens = build_n_queens(4)
+search = DFSearch(solver, first_unfixed(queens))
+
+search.on_solution(
+    lambda: print(tuple(queen.value for queen in queens))
+)
+search.solve()
+```
+
 ## Rust版Sparse Set
 
 Rust版は内部実装を明示するため、非公開モジュール`minicp._rust`から利用します。現時点では基本的な集合操作のみを実装し、状態の保存・復元はまだPython版だけが対応しています。
