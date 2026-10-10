@@ -29,6 +29,8 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - 2変数のドメインを共通部分へ絞るdomain-consistentな`Equal`
 - 変数同士と変数・定数の等式を統一して作る`equal`
 - `b <=> (x == value)`を双方向に伝播するreified equality `IsEqual`
+- 添字と結果の値サポートを双方向に検査するdomain-consistentな`Element1D`
+- `values[index]`を表す結果変数を生成して制約をpostする`element`
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -86,6 +88,8 @@ StateManager
   `{0, 1}`ドメインを所有する特殊な変数なので`IntVar`を継承する。
 - Java版の`equal(x, value)`は無名制約で直接fixするが、Python版は定数を固定済み
   `IntVar`へ変換し、変数同士の`Equal`を再利用する。
+- `Element1D`は伝播のたびに添字と結果の現在のドメインを走査する。support counterや
+  residueによる高速化は、基本となるサポート検査を理解した後の課題として残す。
 - Pythonの演算子オーバーロードはまだ導入せず、Viewの生成を明示する`plus`、
   `minus`、`mul`を使用する。
 - N-Queensの対角線は、講義02時点の実装を残すためoffset付き`NotEqual`で表現する。
@@ -109,10 +113,9 @@ StateManager
 
 講義03・04の内容を段階的に実装する候補:
 
-1. `Element1D`
-2. 素朴なTable constraint
-3. `StateSparseBitSet`
-4. Compact Table
+1. 素朴なTable constraint
+2. `StateSparseBitSet`
+3. Compact Table
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。
