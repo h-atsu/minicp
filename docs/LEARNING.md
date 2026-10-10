@@ -34,6 +34,8 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - `values[index]`を表す結果変数を生成して制約をpostする`element`
 - 許可タプルを全走査して値のサポートを探す`TableDecomp`
 - タプル集合をbitsetで更新するCompact Table制約`TableCT`
+- 前向き・後ろ向き到達可能性で入力値を枝刈りする`Automaton`
+- `Automaton`の伝播と受理列の探索を確認するnotebook
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -101,6 +103,8 @@ StateManager
   正しさに影響しない探索ヒントなので復元しない。
 - `TableCT`の値別supportは、連続値域を仮定するJava版の配列ではなく、任意の整数値と
   Variable Viewをそのまま扱える`dict[value, SupportBitSet]`で保持する。
+- 本家MiniCPにはない`Automaton`を専用制約として持つ。内部状態変数へTable制約を
+  分解せず、前向き・後ろ向きに受理経路を求める読みやすい参照実装とする。
 - Pythonの演算子オーバーロードはまだ導入せず、Viewの生成を明示する`plus`、
   `minus`、`mul`を使用する。
 - N-Queensの対角線は、講義02時点の実装を残すためoffset付き`NotEqual`で表現する。
@@ -127,6 +131,7 @@ StateManager
 ## Possible next steps
 
 講義04までのTable制約は、素朴な`TableDecomp`とbitsetを使う`TableCT`を実装済み。
+応用として、状態遷移を直接扱う専用`Automaton`制約も実装済み。
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

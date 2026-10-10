@@ -1,4 +1,5 @@
 from minicp.constraints import (
+    Automaton,
     Constraint,
     Element1D,
     Equal,
@@ -32,6 +33,7 @@ from minicp.variable import (
 )
 
 __all__ = [
+    "Automaton",
     "BoolVar",
     "Constraint",
     "DFSearch",

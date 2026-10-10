@@ -1,17 +1,17 @@
 # %%
-from minicp.constraints import not_equal
+from minicp.constraints import Element1D
 from minicp.search import DFSearch, first_unfixed
 from minicp.solver import Solver
-from minicp.variable import IntVar, plus
+from minicp.variable import IntVar
 
 # %%
 
 solver = Solver()
-x = IntVar(solver, 1, 10, name="x")
+x = IntVar(solver, 0, 10, name="x")
 y = IntVar(solver, 1, 10, name="y")
 
 
-solver.post(not_equal(plus(x, 3), y))
+solver.post(Element1D([1, 2, 3], x, y))
 
 # %%
 
