@@ -25,6 +25,7 @@ build-backend = "maturin"
 dev = [
     "ipykernel>=7.4.0",
     "maturin>=1.15.0",
+    "ortools>=9.15.6755",
     "pytest>=9.1.1",
     "ruff>=0.16.10",
     "ty>=0.0.85",
