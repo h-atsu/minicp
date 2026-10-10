@@ -25,6 +25,9 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - `IntVar`とfix/domain/bound変更通知
 - `SparseSet`と`IntVar`の`remove_below`、`remove_above`
 - Offset、Opposite、Scale Variable Viewと生成関数
+- fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
+- 合計を表す結果変数を生成して制約をpostする`sum_var`
+- binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
 - `Constraint`基底クラス
 - offset付き`NotEqual`: `x != y + offset`
 - 制約伝播キューとfix-pointを管理する`Solver`
@@ -98,12 +101,11 @@ StateManager
 
 講義03・04の内容を段階的に実装する候補:
 
-1. bound-consistentな`Sum`
-2. `BoolVar`とreified constraint
-3. `Element1D`
-4. 素朴なTable constraint
-5. `StateSparseBitSet`
-6. Compact Table
+1. `BoolVar`とreified constraint
+2. `Element1D`
+3. 素朴なTable constraint
+4. `StateSparseBitSet`
+5. Compact Table
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

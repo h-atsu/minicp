@@ -1,4 +1,4 @@
-from minicp.constraint import Constraint, NotEqual, not_equal
+from minicp.constraint import Constraint, NotEqual, Sum, not_equal, sum_var
 from minicp.exceptions import Inconsistency
 from minicp.search import DFSearch, SearchStatistics
 from minicp.solver import Solver
@@ -31,8 +31,10 @@ __all__ = [
     "StateInt",
     "StateManager",
     "StateStack",
+    "Sum",
     "minus",
     "mul",
     "not_equal",
     "plus",
+    "sum_var",
 ]
