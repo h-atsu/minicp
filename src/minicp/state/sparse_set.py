@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from minicp.state import StateInt, StateManager
+from minicp.state.core import StateInt, StateManager
 
 
 class SparseSet:

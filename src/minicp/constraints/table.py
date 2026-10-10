@@ -6,8 +6,7 @@ from collections.abc import Sequence
 
 from minicp.constraints.base import Constraint
 from minicp.exceptions import Inconsistency
-from minicp.sparse_bit_set import StateSparseBitSet, SupportBitSet
-from minicp.state import StateInt
+from minicp.state import StateInt, StateSparseBitSet, SupportBitSet
 from minicp.variable import IntVarLike
 
 

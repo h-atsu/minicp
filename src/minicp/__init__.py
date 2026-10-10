@@ -1,5 +1,6 @@
 from minicp.constraints import (
     AllDifferentBinary,
+    AllDifferentDC,
     Automaton,
     Constraint,
     Element1D,
@@ -19,9 +20,13 @@ from minicp.constraints import (
 from minicp.exceptions import Inconsistency
 from minicp.search import DFSearch, SearchStatistics, first_unfixed
 from minicp.solver import Solver
-from minicp.sparse_bit_set import StateSparseBitSet
-from minicp.sparse_set import SparseSet
-from minicp.state import StateInt, StateManager, StateStack
+from minicp.state import (
+    SparseSet,
+    StateInt,
+    StateManager,
+    StateSparseBitSet,
+    StateStack,
+)
 from minicp.variable import (
     BoolVar,
     IntVar,
@@ -36,6 +41,7 @@ from minicp.variable import (
 
 __all__ = [
     "AllDifferentBinary",
+    "AllDifferentDC",
     "Automaton",
     "BoolVar",
     "Constraint",

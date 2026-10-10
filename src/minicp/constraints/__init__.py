@@ -1,6 +1,10 @@
 """Constraint implementations and modeling helpers."""
 
-from minicp.constraints.all_different import AllDifferentBinary, all_different
+from minicp.constraints.all_different import (
+    AllDifferentBinary,
+    AllDifferentDC,
+    all_different,
+)
 from minicp.constraints.automaton import Automaton
 from minicp.constraints.base import Constraint
 from minicp.constraints.element import Element1D, element
@@ -11,6 +15,7 @@ from minicp.constraints.table import TableCT, TableDecomp
 
 __all__ = [
     "AllDifferentBinary",
+    "AllDifferentDC",
     "Automaton",
     "Constraint",
     "Element1D",

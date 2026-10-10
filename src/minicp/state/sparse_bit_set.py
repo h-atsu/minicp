@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from minicp.state import StateInt, StateManager
+from minicp.state.core import StateInt, StateManager
 
 _WORD_SIZE = 64
 _FULL_WORD = (1 << _WORD_SIZE) - 1

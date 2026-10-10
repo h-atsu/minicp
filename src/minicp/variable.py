@@ -6,8 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Protocol
 
 from minicp.exceptions import Inconsistency
-from minicp.sparse_set import SparseSet
-from minicp.state import StateStack
+from minicp.state import SparseSet, StateStack
 
 if TYPE_CHECKING:
     from minicp.constraints.base import Constraint

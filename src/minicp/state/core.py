@@ -1,4 +1,4 @@
-"""Reversible state used while exploring a search tree."""
+"""Core reversible state used while exploring a search tree."""
 
 from __future__ import annotations
 

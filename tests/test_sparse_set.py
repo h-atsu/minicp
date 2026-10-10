@@ -4,7 +4,7 @@ from typing import Protocol
 import pytest
 
 from minicp._rust import SparseSet as RustSparseSet
-from minicp.sparse_set import SparseSet as PythonSparseSet
+from minicp.state import SparseSet as PythonSparseSet
 from minicp.state import StateManager
 
 

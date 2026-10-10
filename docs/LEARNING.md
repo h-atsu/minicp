@@ -23,6 +23,7 @@ MiniCPの講義05まで視聴済み。実装は講義02の中核である可逆�
 - 可逆な`SparseSet`
 - 非ゼロwordを可逆なprefixで管理する`StateSparseBitSet`
 - 可逆な購読リストとしての`StateStack`
+- 可逆状態と可逆データ構造をまとめる`state` package
 - `IntVar`とfix/domain/bound変更通知
 - `SparseSet`と`IntVar`の`remove_below`、`remove_above`
 - Offset、Opposite、Scale Variable Viewと生成関数
@@ -37,6 +38,8 @@ MiniCPの講義05まで視聴済み。実装は講義02の中核である可逆�
 - 前向き・後ろ向き到達可能性で入力値を枝刈りする`Automaton`
 - `Automaton`の伝播と受理列の探索を確認するnotebook
 - 全変数ペアを`NotEqual`へ分解する`AllDifferentBinary`
+- maximum matchingとalternating graphでdomain consistencyを実現する`AllDifferentDC`
+- 制約から独立した`algorithms` packageのmaximum matching、SCC、到達探索
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -114,11 +117,19 @@ StateManager
 - N-Queensは`AllDifferent`を使わず、講義02で実装可能な`NotEqual`へ分解する。
 - `AllDifferentBinary`は独自の伝播処理を持たず、post時に既存の`NotEqual`を全ペアへ
   配置する。Hall集合を使う強い枝刈りは後続実装と比較できるよう意図的に行わない。
+- `AllDifferentDC`は理解しやすさを優先し、伝播ごとにmaximum matchingとalternating
+  graphを作り直す。matchingの増分更新や可逆化は行わない。
+- maximum matchingと一般的なグラフ探索は`algorithms` packageへ分離し、
+  `AllDifferentDC`には交互グラフの構築と枝刈り判断を残す。
+- `all_different`はdomain-consistentな`AllDifferentDC`を生成する。弱い分解と比較する
+  場合は`AllDifferentBinary`を直接使う。
 - Javaの`Impl`クラスや不要なinterface階層は、そのままPythonへ移植しない。
 
 ## Important design decisions
 
 - Python実装を読みやすい参照実装とし、Rustは理解後の移植先とする。
+- `StateManager`、`StateInt`と、それらに依存する`SparseSet`、
+  `StateSparseBitSet`は`state` packageへまとめる。
 - 制約は`constraints` packageで概念ごとのmoduleに分け、基底クラスだけを`base`に置く。
   旧`constraint` moduleとの後方互換層は、学習コードを単純に保つため設けない。
 - 学習用のモデルはlibrary packageへ含めず、`# %%`で段階的に実行できる
@@ -133,10 +144,10 @@ StateManager
 
 ## Possible next steps
 
-講義05のAllDifferentを段階的に実装する候補:
+講義05の次の候補:
 
-1. fixed prefixを使うforward checking版
-2. maximum matchingとalternating graphを使うdomain-consistent版
+1. fixed prefixを使うforward checking版を比較用に追加する
+2. maximum matchingを増分更新し、作り直す参照実装と比較する
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。
