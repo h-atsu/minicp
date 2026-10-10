@@ -33,6 +33,7 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - 添字と結果の値サポートを双方向に検査するdomain-consistentな`Element1D`
 - `values[index]`を表す結果変数を生成して制約をpostする`element`
 - 許可タプルを全走査して値のサポートを探す`TableDecomp`
+- タプル集合をbitsetで更新するCompact Table制約`TableCT`
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -98,6 +99,8 @@ StateManager
   1で初期化するが、Python版では表す集合を`[0, capacity)`へ正確に限定する。
 - `StateSparseBitSet`のwordと非ゼロword数は可逆にする一方、supportのresidueは
   正しさに影響しない探索ヒントなので復元しない。
+- `TableCT`の値別supportは、連続値域を仮定するJava版の配列ではなく、任意の整数値と
+  Variable Viewをそのまま扱える`dict[value, SupportBitSet]`で保持する。
 - Pythonの演算子オーバーロードはまだ導入せず、Viewの生成を明示する`plus`、
   `minus`、`mul`を使用する。
 - N-Queensの対角線は、講義02時点の実装を残すためoffset付き`NotEqual`で表現する。
@@ -123,9 +126,7 @@ StateManager
 
 ## Possible next steps
 
-講義03・04の内容を段階的に実装する候補:
-
-1. Compact Table
+講義04までのTable制約は、素朴な`TableDecomp`とbitsetを使う`TableCT`を実装済み。
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。
