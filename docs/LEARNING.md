@@ -24,6 +24,7 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - 可逆な購読リストとしての`StateStack`
 - `IntVar`とfix/domain/bound変更通知
 - `SparseSet`と`IntVar`の`remove_below`、`remove_above`
+- Offset、Opposite、Scale Variable Viewと生成関数
 - `Constraint`基底クラス
 - offset付き`NotEqual`: `x != y + offset`
 - 制約伝播キューとfix-pointを管理する`Solver`
@@ -71,7 +72,12 @@ StateManager
   状態を複数回変更した場合は変更ごとに記録する。
 - 最適化された`Trailer`の世代管理と`Copier`は未実装。
 - Java版の独立した`IntDomain`層は作らず、`IntVar`が`SparseSet`を直接保持する。
-- Variable Viewは未実装。N-Queensの対角線はoffset付き`NotEqual`で表現する。
+- Variable Viewは独立したドメインを持たず、元の`IntVar`へ操作と購読を委譲する。
+- 通常変数とViewの共通操作は`IntVarLike` Protocolで表し、ViewはSparse Setを
+  所有する具体的な`IntVar`を継承しない。
+- Pythonの演算子オーバーロードはまだ導入せず、Viewの生成を明示する`plus`、
+  `minus`、`mul`を使用する。
+- N-Queensの対角線は、講義02時点の実装を残すためoffset付き`NotEqual`で表現する。
 - branchingはユーザーが明示的に渡し、探索木の走査だけを`DFSearch`が担当する。
 - `IntVar`は必ず1つの`Solver`に属するが、`Solver`は全変数の一覧をまだ管理しない。
 - N-Queensは`AllDifferent`を使わず、講義02で実装可能な`NotEqual`へ分解する。
@@ -92,13 +98,12 @@ StateManager
 
 講義03・04の内容を段階的に実装する候補:
 
-1. Offset、Opposite、Scale Variable View
-2. bound-consistentな`Sum`
-3. `BoolVar`とreified constraint
-4. `Element1D`
-5. 素朴なTable constraint
-6. `StateSparseBitSet`
-7. Compact Table
+1. bound-consistentな`Sum`
+2. `BoolVar`とreified constraint
+3. `Element1D`
+4. 素朴なTable constraint
+5. `StateSparseBitSet`
+6. Compact Table
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

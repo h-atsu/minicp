@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 from minicp.constraint import not_equal
 from minicp.search import Branch, DFSearch, SearchStatistics
 from minicp.solver import Solver
-from minicp.variable import IntVar
+from minicp.variable import IntVar, IntVarLike
 
 
 def build_n_queens(n: int) -> tuple[Solver, list[IntVar]]:
@@ -32,7 +32,9 @@ def build_n_queens(n: int) -> tuple[Solver, list[IntVar]]:
     return solver, queens
 
 
-def first_unfixed(variables: Sequence[IntVar]) -> Callable[[], list[Branch]]:
+def first_unfixed(
+    variables: Sequence[IntVarLike],
+) -> Callable[[], list[Branch]]:
     """Branch on the minimum value of the first non-fixed variable."""
 
     def branching() -> list[Branch]:

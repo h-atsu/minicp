@@ -9,7 +9,7 @@ from minicp.state import StateInt
 
 if TYPE_CHECKING:
     from minicp.solver import Solver
-    from minicp.variable import IntVar
+    from minicp.variable import IntVarLike
 
 
 class Constraint(ABC):
@@ -39,7 +39,12 @@ class Constraint(ABC):
 class NotEqual(Constraint):
     """The constraint ``x != y + offset``."""
 
-    def __init__(self, x: IntVar, y: IntVar, offset: int = 0) -> None:
+    def __init__(
+        self,
+        x: IntVarLike,
+        y: IntVarLike,
+        offset: int = 0,
+    ) -> None:
         if x.solver is not y.solver:
             raise ValueError("variables belong to different solvers")
         super().__init__(x.solver)
@@ -63,7 +68,11 @@ class NotEqual(Constraint):
             self.deactivate()
 
 
-def not_equal(x: IntVar, y: IntVar, offset: int = 0) -> NotEqual:
+def not_equal(
+    x: IntVarLike,
+    y: IntVarLike,
+    offset: int = 0,
+) -> NotEqual:
     """Create the constraint ``x != y + offset``."""
 
     return NotEqual(x, y, offset)

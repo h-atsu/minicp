@@ -8,12 +8,14 @@ from collections.abc import Callable, Sequence
 from minicp.constraint import not_equal
 from minicp.search import Branch, DFSearch
 from minicp.solver import Solver
-from minicp.variable import IntVar
+from minicp.variable import IntVar, IntVarLike
 
 # %%
 
 
-def first_unfixed(variables: Sequence[IntVar]) -> Callable[[], list[Branch]]:
+def first_unfixed(
+    variables: Sequence[IntVarLike],
+) -> Callable[[], list[Branch]]:
     """Branch on the minimum value of the first non-fixed variable."""
 
     def branching() -> list[Branch]:
