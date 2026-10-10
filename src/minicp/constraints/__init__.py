@@ -5,6 +5,7 @@ from minicp.constraints.element import Element1D, element
 from minicp.constraints.equality import Equal, IsEqual, equal, is_equal
 from minicp.constraints.not_equal import NotEqual, not_equal
 from minicp.constraints.sum import Sum, sum_var
+from minicp.constraints.table import TableDecomp
 
 __all__ = [
     "Constraint",
@@ -13,6 +14,7 @@ __all__ = [
     "IsEqual",
     "NotEqual",
     "Sum",
+    "TableDecomp",
     "element",
     "equal",
     "is_equal",
