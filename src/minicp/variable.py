@@ -95,6 +95,34 @@ class IntVar:
 
         self._notify_change(old_size, old_min, old_max)
 
+    def remove_below(self, value: int) -> None:
+        """Remove every domain value strictly smaller than ``value``."""
+
+        old_size = self.size
+        old_min = self.min
+        old_max = self.max
+        if not self._domain.remove_below(value):
+            return
+
+        if self.size == 0:
+            raise Inconsistency(f"removing values below {value} emptied {self.name or 'IntVar'}")
+
+        self._notify_change(old_size, old_min, old_max)
+
+    def remove_above(self, value: int) -> None:
+        """Remove every domain value strictly larger than ``value``."""
+
+        old_size = self.size
+        old_min = self.min
+        old_max = self.max
+        if not self._domain.remove_above(value):
+            return
+
+        if self.size == 0:
+            raise Inconsistency(f"removing values above {value} emptied {self.name or 'IntVar'}")
+
+        self._notify_change(old_size, old_min, old_max)
+
     def propagate_on_fix(self, constraint: Constraint) -> None:
         self._on_fix.append(constraint)
 

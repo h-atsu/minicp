@@ -73,6 +73,34 @@ class SparseSet:
 
         return True
 
+    def remove_below(self, value: int) -> bool:
+        """Remove every member strictly smaller than ``value``.
+
+        Return whether the set changed.  Iterating over a snapshot keeps this
+        operation expressed in terms of :meth:`remove`, so the same reversible
+        size and bound updates are used for both single and bulk removals.
+        """
+
+        changed = False
+        for candidate in self.values():
+            if candidate < value:
+                self.remove(candidate)
+                changed = True
+        return changed
+
+    def remove_above(self, value: int) -> bool:
+        """Remove every member strictly larger than ``value``.
+
+        Return whether the set changed.
+        """
+
+        changed = False
+        for candidate in self.values():
+            if candidate > value:
+                self.remove(candidate)
+                changed = True
+        return changed
+
     def values(self) -> list[int]:
         return [
             value + self._offset
