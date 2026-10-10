@@ -10,7 +10,7 @@ MiniCPの講義を通して、制約プログラミングソルバーの動作�
 
 ## Current course progress
 
-MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆状態、ドメイン、
+MiniCPの講義05まで視聴済み。実装は講義02の中核である可逆状態、ドメイン、
 変数通知、制約伝播、fix-point、深さ優先探索を使ってN-Queensを解ける段階から、
 講義03以降で使う境界更新APIの追加へ進んでいる。
 
@@ -36,6 +36,7 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - タプル集合をbitsetで更新するCompact Table制約`TableCT`
 - 前向き・後ろ向き到達可能性で入力値を枝刈りする`Automaton`
 - `Automaton`の伝播と受理列の探索を確認するnotebook
+- 全変数ペアを`NotEqual`へ分解する`AllDifferentBinary`
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -111,6 +112,8 @@ StateManager
 - branchingはユーザーが明示的に渡し、探索木の走査だけを`DFSearch`が担当する。
 - `IntVar`は必ず1つの`Solver`に属するが、`Solver`は全変数の一覧をまだ管理しない。
 - N-Queensは`AllDifferent`を使わず、講義02で実装可能な`NotEqual`へ分解する。
+- `AllDifferentBinary`は独自の伝播処理を持たず、post時に既存の`NotEqual`を全ペアへ
+  配置する。Hall集合を使う強い枝刈りは後続実装と比較できるよう意図的に行わない。
 - Javaの`Impl`クラスや不要なinterface階層は、そのままPythonへ移植しない。
 
 ## Important design decisions
@@ -130,8 +133,10 @@ StateManager
 
 ## Possible next steps
 
-講義04までのTable制約は、素朴な`TableDecomp`とbitsetを使う`TableCT`を実装済み。
-応用として、状態遷移を直接扱う専用`Automaton`制約も実装済み。
+講義05のAllDifferentを段階的に実装する候補:
+
+1. fixed prefixを使うforward checking版
+2. maximum matchingとalternating graphを使うdomain-consistent版
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

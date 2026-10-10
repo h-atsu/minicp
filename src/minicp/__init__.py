@@ -1,4 +1,5 @@
 from minicp.constraints import (
+    AllDifferentBinary,
     Automaton,
     Constraint,
     Element1D,
@@ -8,6 +9,7 @@ from minicp.constraints import (
     Sum,
     TableCT,
     TableDecomp,
+    all_different,
     element,
     equal,
     is_equal,
@@ -33,6 +35,7 @@ from minicp.variable import (
 )
 
 __all__ = [
+    "AllDifferentBinary",
     "Automaton",
     "BoolVar",
     "Constraint",
@@ -57,6 +60,7 @@ __all__ = [
     "Sum",
     "TableCT",
     "TableDecomp",
+    "all_different",
     "element",
     "equal",
     "first_unfixed",
