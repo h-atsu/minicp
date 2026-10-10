@@ -1,4 +1,4 @@
-from minicp.constraint import (
+from minicp.constraints import (
     Constraint,
     Element1D,
     Equal,
@@ -12,7 +12,7 @@ from minicp.constraint import (
     sum_var,
 )
 from minicp.exceptions import Inconsistency
-from minicp.search import DFSearch, SearchStatistics
+from minicp.search import DFSearch, SearchStatistics, first_unfixed
 from minicp.solver import Solver
 from minicp.sparse_set import SparseSet
 from minicp.state import StateInt, StateManager, StateStack
@@ -51,6 +51,7 @@ __all__ = [
     "Sum",
     "element",
     "equal",
+    "first_unfixed",
     "is_equal",
     "minus",
     "mul",

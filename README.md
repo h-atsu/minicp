@@ -71,36 +71,22 @@ assert domain.contains(4)
 assert domain.size == 5
 ```
 
-## Python版SolverとN-Queens
+## Python版Solverとインタラクティブな例
 
 Python版には、整数変数、制約伝播、深さ優先探索の最小実装があります。
 N-Queensでは各列の女王の行番号を整数変数で表し、同じ行と対角線を
 `not_equal`制約で除外します。
 
-```python
-from minicp.examples.n_queens import solve_n_queens
+学習用の例は`notebooks/`に置き、`# %%`で区切ったPython Interactive Window形式で
+モデル構築、探索、結果表示を順番に実行できるようにしています。
 
-solutions, statistics = solve_n_queens(8)
-
-assert len(solutions) == 92
-print(solutions[0])
-print(statistics)
+```console
+uv run python notebooks/n_queens.py
+uv run python notebooks/subset_sum_problem.py
 ```
 
-モデルの構築と探索を分けて確認することもできます。
-
-```python
-from minicp import DFSearch
-from minicp.examples.n_queens import build_n_queens, first_unfixed
-
-solver, queens = build_n_queens(4)
-search = DFSearch(solver, first_unfixed(queens))
-
-search.on_solution(
-    lambda: print(tuple(queen.value for queen in queens))
-)
-search.solve()
-```
+エディタでは各ファイルを開き、セル単位で実行すると制約伝播前後の状態を
+途中で確認できます。
 
 ## Rust版Sparse Set
 

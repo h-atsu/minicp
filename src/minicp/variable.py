@@ -10,7 +10,7 @@ from minicp.sparse_set import SparseSet
 from minicp.state import StateStack
 
 if TYPE_CHECKING:
-    from minicp.constraint import Constraint
+    from minicp.constraints.base import Constraint
     from minicp.solver import Solver
 
 

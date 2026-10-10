@@ -9,7 +9,7 @@ from minicp.exceptions import Inconsistency
 from minicp.state import StateManager
 
 if TYPE_CHECKING:
-    from minicp.constraint import Constraint
+    from minicp.constraints.base import Constraint
 
 
 class Solver:

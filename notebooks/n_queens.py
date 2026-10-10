@@ -3,41 +3,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-
-from minicp.constraint import not_equal
-from minicp.search import Branch, DFSearch
+from minicp.constraints import not_equal
+from minicp.search import DFSearch, first_unfixed
 from minicp.solver import Solver
-from minicp.variable import IntVar, IntVarLike
-
-# %%
-
-
-def first_unfixed(
-    variables: Sequence[IntVarLike],
-) -> Callable[[], list[Branch]]:
-    """Branch on the minimum value of the first non-fixed variable."""
-
-    def branching() -> list[Branch]:
-        variable = next(
-            (candidate for candidate in variables if not candidate.is_fixed),
-            None,
-        )
-        if variable is None:
-            return []
-
-        value = variable.min
-
-        def assign() -> None:
-            variable.fix(value)
-
-        def exclude() -> None:
-            variable.remove(value)
-
-        return [assign, exclude]
-
-    return branching
-
+from minicp.variable import IntVar
 
 # %%
 N = 11

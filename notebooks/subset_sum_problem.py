@@ -3,39 +3,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-
-from minicp.constraint import Sum
-from minicp.search import Branch, DFSearch
+from minicp.constraints import Sum
+from minicp.search import DFSearch, first_unfixed
 from minicp.solver import Solver
-from minicp.variable import IntVar, IntVarLike, mul
-
-# %%
-
-
-def first_unfixed(
-    variables: Sequence[IntVarLike],
-) -> Callable[[], list[Branch]]:
-    """Branch on whether the first undecided item is selected."""
-
-    def branching() -> list[Branch]:
-        variable = next(
-            (candidate for candidate in variables if not candidate.is_fixed),
-            None,
-        )
-        if variable is None:
-            return []
-
-        def select() -> None:
-            variable.fix(1)
-
-        def exclude() -> None:
-            variable.fix(0)
-
-        return [select, exclude]
-
-    return branching
-
+from minicp.variable import IntVar, mul
 
 # %%
 VALUES = [3, 5, 6, 7, 9]

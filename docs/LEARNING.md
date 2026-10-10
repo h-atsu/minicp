@@ -101,6 +101,10 @@ StateManager
 ## Important design decisions
 
 - Python実装を読みやすい参照実装とし、Rustは理解後の移植先とする。
+- 制約は`constraints` packageで概念ごとのmoduleに分け、基底クラスだけを`base`に置く。
+  旧`constraint` moduleとの後方互換層は、学習コードを単純に保つため設けない。
+- 学習用のモデルはlibrary packageへ含めず、`# %%`で段階的に実行できる
+  `notebooks/`へ集約する。複数のモデルで使う探索戦略だけを`search`に置く。
 - 制約のactive状態と変数ドメインはバックトラック可能にする。
 - 制約のscheduled状態は伝播キューがfix-pointで空になるという前提で通常の
   `bool`として扱う。

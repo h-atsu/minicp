@@ -1,7 +1,6 @@
 # %%
-from minicp.constraint import not_equal
-from minicp.examples.n_queens import first_unfixed
-from minicp.search import DFSearch
+from minicp.constraints import not_equal
+from minicp.search import DFSearch, first_unfixed
 from minicp.solver import Solver
 from minicp.variable import IntVar, plus
 

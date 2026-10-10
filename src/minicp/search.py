@@ -10,10 +10,37 @@ from minicp.exceptions import Inconsistency
 
 if TYPE_CHECKING:
     from minicp.solver import Solver
+    from minicp.variable import IntVarLike
 
 
 Branch = Callable[[], None]
 Branching = Callable[[], Sequence[Branch]]
+
+
+def first_unfixed(
+    variables: Sequence[IntVarLike],
+) -> Branching:
+    """Branch on the minimum value of the first non-fixed variable."""
+
+    def branching() -> list[Branch]:
+        variable = next(
+            (candidate for candidate in variables if not candidate.is_fixed),
+            None,
+        )
+        if variable is None:
+            return []
+
+        value = variable.min
+
+        def assign() -> None:
+            variable.fix(value)
+
+        def exclude() -> None:
+            variable.remove(value)
+
+        return [assign, exclude]
+
+    return branching
 
 
 @dataclass
