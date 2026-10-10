@@ -50,6 +50,9 @@ for i in range(N):
         solver.post(not_equal(queens[i], queens[j], distance))
         solver.post(not_equal(queens[i], queens[j], -distance))
 
+
+# %%
+
 search = DFSearch(solver, first_unfixed(queens))
 solutions: list[tuple[int, ...]] = []
 
