@@ -25,6 +25,10 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - `IntVar`とfix/domain/bound変更通知
 - `SparseSet`と`IntVar`の`remove_below`、`remove_above`
 - Offset、Opposite、Scale Variable Viewと生成関数
+- `{0, 1}`ドメインを持つ`BoolVar`
+- 2変数のドメインを共通部分へ絞るdomain-consistentな`Equal`
+- 変数同士と変数・定数の等式を統一して作る`equal`
+- `b <=> (x == value)`を双方向に伝播するreified equality `IsEqual`
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -78,6 +82,10 @@ StateManager
 - Variable Viewは独立したドメインを持たず、元の`IntVar`へ操作と購読を委譲する。
 - 通常変数とViewの共通操作は`IntVarLike` Protocolで表し、ViewはSparse Setを
   所有する具体的な`IntVar`を継承しない。
+- Java版の`BoolVarImpl`はbinary変数へ委譲するが、Python版の`BoolVar`は実際に
+  `{0, 1}`ドメインを所有する特殊な変数なので`IntVar`を継承する。
+- Java版の`equal(x, value)`は無名制約で直接fixするが、Python版は定数を固定済み
+  `IntVar`へ変換し、変数同士の`Equal`を再利用する。
 - Pythonの演算子オーバーロードはまだ導入せず、Viewの生成を明示する`plus`、
   `minus`、`mul`を使用する。
 - N-Queensの対角線は、講義02時点の実装を残すためoffset付き`NotEqual`で表現する。
@@ -101,11 +109,10 @@ StateManager
 
 講義03・04の内容を段階的に実装する候補:
 
-1. `BoolVar`とreified constraint
-2. `Element1D`
-3. 素朴なTable constraint
-4. `StateSparseBitSet`
-5. Compact Table
+1. `Element1D`
+2. 素朴なTable constraint
+3. `StateSparseBitSet`
+4. Compact Table
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

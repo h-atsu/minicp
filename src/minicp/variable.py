@@ -192,6 +192,21 @@ class IntVar:
         return f"{label}={{{', '.join(map(str, sorted(self.values())))}}}"
 
 
+class BoolVar(IntVar):
+    """A decision variable whose domain is restricted to ``{0, 1}``."""
+
+    def __init__(self, solver: Solver, name: str | None = None) -> None:
+        super().__init__(solver, 0, 1, name)
+
+    @property
+    def is_true(self) -> bool:
+        return self.is_fixed and self.value == 1
+
+    @property
+    def is_false(self) -> bool:
+        return self.is_fixed and self.value == 0
+
+
 class _IntVarView(ABC):
     """Common behavior for views that delegate to another integer variable."""
 
