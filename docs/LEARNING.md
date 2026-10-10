@@ -21,6 +21,7 @@ MiniCPの講義04まで視聴済み。実装は講義02の中核である可逆�
 - 素朴なtrailing方式の`StateManager`
 - `StateInt`
 - 可逆な`SparseSet`
+- 非ゼロwordを可逆なprefixで管理する`StateSparseBitSet`
 - 可逆な購読リストとしての`StateStack`
 - `IntVar`とfix/domain/bound変更通知
 - `SparseSet`と`IntVar`の`remove_below`、`remove_above`
@@ -93,6 +94,10 @@ StateManager
   residueによる高速化は、基本となるサポート検査を理解した後の課題として残す。
 - `TableDecomp`は値ごとに許可タプルを先頭から走査する。タプルの可逆な管理や
   bitsetによる高速化はCompact Tableを実装する段階まで導入しない。
+- `StateSparseBitSet`の末尾wordではcapacity外のbitを立てない。Java版では全wordを
+  1で初期化するが、Python版では表す集合を`[0, capacity)`へ正確に限定する。
+- `StateSparseBitSet`のwordと非ゼロword数は可逆にする一方、supportのresidueは
+  正しさに影響しない探索ヒントなので復元しない。
 - Pythonの演算子オーバーロードはまだ導入せず、Viewの生成を明示する`plus`、
   `minus`、`mul`を使用する。
 - N-Queensの対角線は、講義02時点の実装を残すためoffset付き`NotEqual`で表現する。
@@ -120,8 +125,7 @@ StateManager
 
 講義03・04の内容を段階的に実装する候補:
 
-1. `StateSparseBitSet`
-2. Compact Table
+1. Compact Table
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

@@ -15,6 +15,7 @@ from minicp.constraints import (
 from minicp.exceptions import Inconsistency
 from minicp.search import DFSearch, SearchStatistics, first_unfixed
 from minicp.solver import Solver
+from minicp.sparse_bit_set import StateSparseBitSet
 from minicp.sparse_set import SparseSet
 from minicp.state import StateInt, StateManager, StateStack
 from minicp.variable import (
@@ -48,6 +49,7 @@ __all__ = [
     "SparseSet",
     "StateInt",
     "StateManager",
+    "StateSparseBitSet",
     "StateStack",
     "Sum",
     "TableDecomp",
