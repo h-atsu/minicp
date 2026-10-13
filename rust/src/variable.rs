@@ -4,6 +4,21 @@ use crate::solver::{ConstraintId, Solver, SolverResult, VariableId};
 use crate::state::StateSparseSet;
 use crate::state::StateStack;
 
+#[derive(Clone, Copy)]
+pub(crate) struct VariableView {
+    pub(crate) variable: VariableId,
+    pub(crate) offset: i64,
+}
+
+impl VariableView {
+    pub(crate) fn identity(variable: VariableId) -> Self {
+        Self {
+            variable,
+            offset: 0,
+        }
+    }
+}
+
 pub(crate) struct Variable {
     pub(crate) domain: StateSparseSet,
     pub(crate) name: Option<String>,

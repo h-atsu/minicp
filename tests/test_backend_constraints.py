@@ -135,6 +135,53 @@ def test_backend_all_different_prunes_hall_set(
     assert variable.value == 3
 
 
+@pytest.mark.parametrize("backend_name", ["python", "rust"])
+def test_backend_all_different_accepts_offset_views(
+    backend_name: str,
+) -> None:
+    if backend_name == "python":
+        solver = python_backend.Solver()
+        first = python_backend.IntVar(solver, 0, 1)
+        second = python_backend.IntVar(solver, 1, 2)
+        third = python_backend.IntVar(solver, 1, 3)
+        constraint = python_backend.all_different(
+            [python_backend.plus(first, 1), second, third]
+        )
+        solver.post(constraint)
+    else:
+        solver = rust_backend.Solver()
+        first = rust_backend.IntVar(solver, 0, 1)
+        second = rust_backend.IntVar(solver, 1, 2)
+        third = rust_backend.IntVar(solver, 1, 3)
+        constraint = rust_backend.all_different(
+            [rust_backend.plus(first, 1), second, third]
+        )
+        solver.post(constraint)
+
+    assert third.value == 3
+    solver.state_manager.save()
+    first.fix(0)
+    solver.fix_point()
+    assert second.value == 2
+    solver.state_manager.restore()
+    assert set(first.values()) == {0, 1}
+    assert set(second.values()) == {1, 2}
+
+
+def test_rust_offset_view_maps_domain_operations() -> None:
+    solver = rust_backend.Solver()
+    variable = rust_backend.IntVar(solver, 1, 3)
+    view = rust_backend.plus(variable, 5)
+
+    assert view.min == 6
+    assert view.max == 8
+    assert view.values() == [6, 7, 8]
+    view.remove(7)
+    assert variable.values() == [1, 3]
+    view.fix(8)
+    assert variable.value == 3
+
+
 def python_circuit() -> CircuitFixture:
     solver = python_backend.Solver()
     successors = [python_backend.IntVar(solver, 0, 4) for _ in range(5)]

@@ -15,7 +15,7 @@ use bindings::solver::PySolver;
 use bindings::sparse_set::PySparseSet;
 use bindings::state::{PyStateInt, PyStateManager};
 use bindings::state_sparse_set::PyStateSparseSet;
-use bindings::variable::{PyBoolVar, PyIntVar};
+use bindings::variable::{PyBoolVar, PyIntVar, PyOffsetView, plus};
 use pyo3::prelude::*;
 
 pyo3::create_exception!(_rust, Inconsistency, pyo3::exceptions::PyException);
@@ -29,6 +29,7 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PySolver>()?;
     module.add_class::<PyIntVar>()?;
     module.add_class::<PyBoolVar>()?;
+    module.add_class::<PyOffsetView>()?;
     module.add_class::<PyConstraint>()?;
     module.add_class::<PyMinimize>()?;
     module.add_class::<PySearchStatistics>()?;
@@ -39,6 +40,7 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(circuit, module)?)?;
     module.add_function(wrap_pyfunction!(element, module)?)?;
     module.add_function(wrap_pyfunction!(sum_var, module)?)?;
+    module.add_function(wrap_pyfunction!(plus, module)?)?;
     module.add("Inconsistency", module.py().get_type::<Inconsistency>())?;
     Ok(())
 }

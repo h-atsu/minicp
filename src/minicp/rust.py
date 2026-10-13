@@ -7,6 +7,7 @@ from minicp._rust import (
     Inconsistency,
     IntVar,
     Minimize,
+    OffsetView,
     SearchStatistics,
     Solver,
     StateInt,
@@ -16,6 +17,7 @@ from minicp._rust import (
     element,
     equal,
     not_equal,
+    plus,
     sum_var,
 )
 from minicp._rust import StateSparseSet as SparseSet
@@ -27,6 +29,7 @@ __all__ = [
     "Inconsistency",
     "IntVar",
     "Minimize",
+    "OffsetView",
     "SearchStatistics",
     "Solver",
     "SparseSet",
@@ -37,5 +40,6 @@ __all__ = [
     "element",
     "equal",
     "not_equal",
+    "plus",
     "sum_var",
 ]

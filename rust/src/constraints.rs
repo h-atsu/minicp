@@ -9,6 +9,7 @@ mod sum;
 
 use crate::solver::{ConstraintId, Solver, SolverResult, VariableId};
 use crate::state::StateInt;
+use crate::variable::VariableView;
 
 #[derive(Clone)]
 pub(crate) enum ConstraintKind {
@@ -22,7 +23,7 @@ pub(crate) enum ConstraintKind {
         y: VariableId,
     },
     AllDifferent {
-        variables: Vec<VariableId>,
+        variables: Vec<VariableView>,
     },
     Circuit {
         variables: Vec<VariableId>,

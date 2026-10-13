@@ -1,11 +1,12 @@
 //! Python constructors for Rust constraints.
 
-use pyo3::exceptions::PyValueError;
+use pyo3::exceptions::{PyTypeError, PyValueError};
 use pyo3::prelude::*;
 
 use crate::Inconsistency;
-use crate::bindings::variable::{PyIntVar, ensure_same_solver};
+use crate::bindings::variable::{PyIntVar, PyOffsetView, ensure_same_solver};
 use crate::solver::{ConstraintId, SharedSolver, VariableId};
+use crate::variable::VariableView;
 
 #[pyclass(unsendable, name = "Constraint")]
 pub(crate) struct PyConstraint {
@@ -39,16 +40,49 @@ pub(crate) fn equal(x: PyRef<'_, PyIntVar>, y: PyRef<'_, PyIntVar>) -> PyResult<
 }
 
 #[pyfunction]
-pub(crate) fn all_different(
-    py: Python<'_>,
-    variables: Vec<Py<PyIntVar>>,
-) -> PyResult<PyConstraint> {
-    let (solver, ids) = variable_ids(py, &variables)?;
+pub(crate) fn all_different(py: Python<'_>, variables: Vec<Py<PyAny>>) -> PyResult<PyConstraint> {
+    let (solver, views) = variable_views(py, &variables)?;
     let id = solver
         .borrow_mut()
-        .new_all_different(ids)
+        .new_all_different_views(views)
         .map_err(PyValueError::new_err)?;
     Ok(PyConstraint { solver, id })
+}
+
+fn variable_views(
+    py: Python<'_>,
+    variables: &[Py<PyAny>],
+) -> PyResult<(SharedSolver, Vec<VariableView>)> {
+    let first = variables
+        .first()
+        .ok_or_else(|| PyValueError::new_err("at least one variable is required"))?;
+    let (solver, first_view) = extract_variable_view(first.bind(py))?;
+    let mut views = Vec::with_capacity(variables.len());
+    views.push(first_view);
+    for variable in &variables[1..] {
+        let (variable_solver, view) = extract_variable_view(variable.bind(py))?;
+        ensure_same_solver(&solver, &variable_solver)?;
+        views.push(view);
+    }
+    Ok((solver, views))
+}
+
+fn extract_variable_view(variable: &Bound<'_, PyAny>) -> PyResult<(SharedSolver, VariableView)> {
+    if let Ok(variable) = variable.extract::<PyRef<'_, PyIntVar>>() {
+        return Ok((variable.solver.clone(), VariableView::identity(variable.id)));
+    }
+    if let Ok(variable) = variable.extract::<PyRef<'_, PyOffsetView>>() {
+        return Ok((
+            variable.solver.clone(),
+            VariableView {
+                variable: variable.id,
+                offset: variable.offset,
+            },
+        ));
+    }
+    Err(PyTypeError::new_err(
+        "all_different expects IntVar or OffsetView values",
+    ))
 }
 
 #[pyfunction]
