@@ -31,7 +31,7 @@ uv sync
 
 ## Rust拡張のビルド
 
-`src/lib.rs`などのRustコードを編集した後は、プロジェクトルートで次を実行します。
+`rust/src/lib.rs`などのRustコードを編集した後は、プロジェクトルートで次を実行します。
 
 ```console
 uv run maturin develop

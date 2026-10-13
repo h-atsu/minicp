@@ -71,6 +71,15 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 
 ## Current architecture
 
+言語ごとの実装場所を明確に分ける。
+
+```text
+src/minicp/       Python参照実装とPython向け名前空間
+rust/src/         Rust実装とPyO3 binding
+tests/            Python単体テストとバックエンド共有テスト
+notebooks/        モデルと可視化の実例
+```
+
 ```text
 N-Queens model
     |
