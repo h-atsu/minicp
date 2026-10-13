@@ -17,8 +17,8 @@ domain = cp.SparseSet(manager, minimum=2, maximum=6)
 既存コードとの互換性のため、`from minicp import Solver`のようなトップレベルAPIは
 Pythonバックエンドを指します。Rust名前空間には、Python版と同じ振る舞いまで移植・検証できた
 APIだけを公開します。現在の`minicp.rust`はTSPに必要な状態管理、ドメイン変数、
-伝播エンジン、`AllDifferentDC`、`Circuit`、`Element1D`、`Sum`、DFS、最小化目的を
-実装しています。それ以外の制約は引き続きPython版だけで利用できます。
+Offset View、伝播エンジン、`AllDifferentDC`、`Circuit`、`Element1D`、`Sum`、DFS、
+最小化目的を実装しています。それ以外の制約は引き続きPython版だけで利用できます。
 
 ## セットアップ
 
@@ -117,6 +117,7 @@ N-Queensでは各列の女王の行番号を整数変数で表し、同じ行と
 
 ```console
 uv run python notebooks/n_queens.py
+uv run python notebooks/n_queens_rust.py
 uv run python notebooks/subset_sum_problem.py
 uv run python notebooks/stable_matching.py
 uv run python notebooks/sudoku.py
@@ -127,6 +128,11 @@ uv run python notebooks/tsp.py
 `notebooks/tsp.py`の`BACKEND`を`"python"`または`"rust"`にすると、同じ
 `Circuit`、`Element1D`、`Sum`、branch-and-boundモデルを各backendで実行できます。
 性能を比較するときはRust拡張をrelease buildします。
+
+`notebooks/n_queens.py`はcallbackで解を記録するPython参照実装、
+`notebooks/n_queens_rust.py`はOffset Viewを使って行と2方向の対角線を3つの
+`AllDifferentDC`で表し、探索対象の変数列をRustへ渡してsnapshotとして解を
+受け取るRust版です。
 
 ```console
 uv run maturin develop --release

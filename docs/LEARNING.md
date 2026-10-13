@@ -66,9 +66,11 @@ Rust版はPython版を参照しながら、TSPに必要な状態管理、制約�
 - `StateInt`
 - 可逆な`SparseSet`
 - 可逆なドメインを持つ`IntVar`と`BoolVar`
+- 元変数へ操作を委譲し、`AllDifferentDC`で利用できるOffset Variable View
 - 変数と制約をIDで所有するarena型`Solver`
 - 可逆な変数event購読と重複scheduleを防ぐ伝播キュー
 - `NotEqual`とdomain-consistentな`Equal`
+- 3つの`AllDifferentDC`とOffset View、Rust内DFSを確認するN-Queens notebook
 - maximum matching、SCC、自由値からの到達探索
 - domain-consistentな`AllDifferentDC`と可逆なsubtour情報を持つ`Circuit`
 - domain-consistentな`Element1D`とbound-consistentな`Sum`
@@ -190,6 +192,9 @@ StateManager
   フォールバックさせない。これにより、どちらの実装を学習・計測しているかを明確にする。
 - Rustの`Sum`は現段階ではfixed prefixを持たず、伝播ごとに全項の境界を再計算する。
   Python版と同じbound consistencyを保ちつつ、最初の移植を読みやすくする意図的な差である。
+- RustのOffset Viewは、現在必要な`AllDifferentDC`とドメイン操作で利用できる。
+  Python版のように全制約が`IntVarLike`を受け取る一般化は、対応する利用例が必要に
+  なった段階で行う。
 - Rustの`DFSearch`は探索中のPython callbackを避けるため、探索対象変数と値順序を受け取り、
   solutionを不変なsnapshotとして蓄積する。探索木のsave/restoreとbranch-and-boundはRust内で行う。
 - Rustのsolver本体、変数、制約、探索、目的関数はPyO3に依存しないmoduleとし、

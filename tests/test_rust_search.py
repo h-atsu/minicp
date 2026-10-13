@@ -40,3 +40,25 @@ def test_rust_search_honors_time_limit() -> None:
 
     assert not statistics.completed
     assert statistics.solutions == 0
+
+
+def test_rust_search_solves_eight_queens_with_all_different_views() -> None:
+    size = 8
+    solver = rust.Solver()
+    queens = [rust.IntVar(solver, 0, size - 1) for _ in range(size)]
+    solver.post(rust.all_different(queens))
+    solver.post(
+        rust.all_different(
+            [rust.plus(queen, column) for column, queen in enumerate(queens)]
+        )
+    )
+    solver.post(
+        rust.all_different(
+            [rust.plus(queen, -column) for column, queen in enumerate(queens)]
+        )
+    )
+
+    search = rust.DFSearch(solver, queens)
+    statistics = search.solve()
+
+    assert statistics.solutions == 92
