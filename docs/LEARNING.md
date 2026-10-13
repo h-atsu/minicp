@@ -44,6 +44,8 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - AllDifferentとCompact Tableで安定性を表すStable Matching notebook
 - 27個のAllDifferentで解くSudoku notebook
 - successor modelとsubtour除去を確認するCircuit notebook
+- fix-pointで目的変数の境界を更新する最小化・最大化目的関数
+- Circuit、Element、Sum、branch-and-boundを組み合わせたTSP notebook
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -129,6 +131,9 @@ StateManager
   場合は`AllDifferentBinary`を直接使う。
 - `Circuit`は`AllDifferentDC`を内部でpostし、固定辺から作られるパスの始点、終点、
   長さだけを可逆に保持する。全頂点を含む前に閉じるsubtourを除去する。
+- 目的関数の最良値は探索状態とは別の通常の整数として保持する。解で境界を厳しくし、
+  次のfix-pointで目的変数へ反映するため、探索状態をrestoreしてもbranch-and-boundの
+  incumbentは残る。
 - Javaの`Impl`クラスや不要なinterface階層は、そのままPythonへ移植しない。
 
 ## Important design decisions
@@ -152,9 +157,8 @@ StateManager
 
 講義06の次の候補:
 
-1. 目的変数とbranch-and-boundによる最小化
-2. TSPモデルとLarge Neighborhood Search
-3. 講義07のCumulative制約
+1. TSPに対するLarge Neighborhood Search
+2. 講義07のCumulative制約
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。

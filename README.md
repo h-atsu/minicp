@@ -86,6 +86,7 @@ uv run python notebooks/subset_sum_problem.py
 uv run python notebooks/stable_matching.py
 uv run python notebooks/sudoku.py
 uv run python notebooks/circuit.py
+uv run python notebooks/tsp.py
 ```
 
 エディタでは各ファイルを開き、セル単位で実行すると制約伝播前後の状態を
