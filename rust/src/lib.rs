@@ -6,7 +6,8 @@ mod state;
 mod state_sparse_set;
 
 use bindings::solver::{
-    PyBoolVar, PyConstraint, PyIntVar, PySolver, all_different, circuit, equal, not_equal,
+    PyBoolVar, PyConstraint, PyIntVar, PySolver, all_different, circuit, element, equal, not_equal,
+    sum_var,
 };
 use bindings::sparse_set::PySparseSet;
 use bindings::state::{PyStateInt, PyStateManager};
@@ -29,6 +30,8 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(equal, module)?)?;
     module.add_function(wrap_pyfunction!(all_different, module)?)?;
     module.add_function(wrap_pyfunction!(circuit, module)?)?;
+    module.add_function(wrap_pyfunction!(element, module)?)?;
+    module.add_function(wrap_pyfunction!(sum_var, module)?)?;
     module.add("Inconsistency", module.py().get_type::<Inconsistency>())?;
     Ok(())
 }

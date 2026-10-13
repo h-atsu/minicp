@@ -70,6 +70,7 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - `NotEqual`とdomain-consistentな`Equal`
 - maximum matching、SCC、自由値からの到達探索
 - domain-consistentな`AllDifferentDC`と可逆なsubtour情報を持つ`Circuit`
+- domain-consistentな`Element1D`とbound-consistentな`Sum`
 - `minicp.rust`から公開する、Python版と共通名の状態管理API
 - Python版との共通テストで、状態保存・復元と集合操作を比較
 

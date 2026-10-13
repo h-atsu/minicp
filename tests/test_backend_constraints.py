@@ -14,6 +14,7 @@ class VariableLike(Protocol):
     def values(self) -> list[int]: ...
     def contains(self, value: int) -> bool: ...
     def fix(self, value: int) -> None: ...
+    def remove(self, value: int) -> None: ...
 
 
 class StateManagerLike(Protocol):
@@ -163,3 +164,29 @@ def test_backend_circuit_prevents_short_subtour(
     solver.state_manager.restore()
 
     assert third.contains(0)
+
+
+@pytest.mark.parametrize("backend_name", ["python", "rust"])
+def test_backend_element_and_sum_propagate(backend_name: str) -> None:
+    if backend_name == "python":
+        solver = python_backend.Solver()
+        index = python_backend.IntVar(solver, 0, 2)
+        result = python_backend.element([5, 8, 5], index)
+        left = python_backend.IntVar(solver, 1, 3)
+        right = python_backend.IntVar(solver, 2, 4)
+        total = python_backend.sum_var([left, right])
+    else:
+        solver = rust_backend.Solver()
+        index = rust_backend.IntVar(solver, 0, 2)
+        result = rust_backend.element([5, 8, 5], index)
+        left = rust_backend.IntVar(solver, 1, 3)
+        right = rust_backend.IntVar(solver, 2, 4)
+        total = rust_backend.sum_var([left, right])
+
+    index.remove(1)
+    total.fix(4)
+    solver.fix_point()
+
+    assert result.value == 5
+    assert set(left.values()) == {1, 2}
+    assert set(right.values()) == {2, 3}

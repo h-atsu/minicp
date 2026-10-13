@@ -286,6 +286,29 @@ pub(crate) fn circuit(py: Python<'_>, variables: Vec<Py<PyIntVar>>) -> PyResult<
     Ok(PyConstraint { solver, id })
 }
 
+#[pyfunction]
+pub(crate) fn element(values: Vec<i64>, index: PyRef<'_, PyIntVar>) -> PyResult<PyIntVar> {
+    let id = index
+        .solver
+        .borrow_mut()
+        .new_element(values, index.id)
+        .map_err(Inconsistency::new_err)?;
+    Ok(PyIntVar {
+        solver: index.solver.clone(),
+        id,
+    })
+}
+
+#[pyfunction]
+pub(crate) fn sum_var(py: Python<'_>, variables: Vec<Py<PyIntVar>>) -> PyResult<PyIntVar> {
+    let (solver, ids) = variable_ids(py, &variables)?;
+    let id = solver
+        .borrow_mut()
+        .new_sum_variable(ids)
+        .map_err(Inconsistency::new_err)?;
+    Ok(PyIntVar { solver, id })
+}
+
 fn variable_ids(
     py: Python<'_>,
     variables: &[Py<PyIntVar>],

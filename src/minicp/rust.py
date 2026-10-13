@@ -10,8 +10,10 @@ from minicp._rust import (
     StateManager,
     all_different,
     circuit,
+    element,
     equal,
     not_equal,
+    sum_var,
 )
 from minicp._rust import StateSparseSet as SparseSet
 
@@ -26,6 +28,8 @@ __all__ = [
     "StateManager",
     "all_different",
     "circuit",
+    "element",
     "equal",
     "not_equal",
+    "sum_var",
 ]

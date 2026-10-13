@@ -42,6 +42,14 @@ enum ConstraintKind {
         length: Vec<StateInt>,
         processed: Vec<StateInt>,
     },
+    Element {
+        values: Vec<i64>,
+        index: VariableId,
+        result: VariableId,
+    },
+    Sum {
+        terms: Vec<(VariableId, i64)>,
+    },
 }
 
 struct Constraint {
@@ -126,6 +134,41 @@ impl Solver {
         }))
     }
 
+    pub fn new_element(&mut self, values: Vec<i64>, index: VariableId) -> SolverResult<VariableId> {
+        if values.is_empty() {
+            return Err("element requires at least one value".into());
+        }
+        let result = self.new_variable(
+            *values.iter().min().unwrap(),
+            *values.iter().max().unwrap(),
+            None,
+        )?;
+        let constraint = self.new_constraint(ConstraintKind::Element {
+            values,
+            index,
+            result,
+        });
+        self.post(constraint)?;
+        Ok(result)
+    }
+
+    pub fn new_sum_variable(&mut self, variables: Vec<VariableId>) -> SolverResult<VariableId> {
+        if variables.is_empty() {
+            return Err("sum requires at least one variable".into());
+        }
+        let minimum = variables.iter().map(|variable| self.min(*variable)).sum();
+        let maximum = variables.iter().map(|variable| self.max(*variable)).sum();
+        let result = self.new_variable(minimum, maximum, None)?;
+        let mut terms: Vec<_> = variables
+            .into_iter()
+            .map(|variable| (variable, 1))
+            .collect();
+        terms.push((result, -1));
+        let constraint = self.new_constraint(ConstraintKind::Sum { terms });
+        self.post(constraint)?;
+        Ok(result)
+    }
+
     fn new_constraint(&mut self, kind: ConstraintKind) -> ConstraintId {
         let id = self.constraints.len();
         self.constraints.push(Constraint {
@@ -174,6 +217,23 @@ impl Solver {
                 }
                 let all_different = self.new_all_different(variables)?;
                 self.post(all_different)?;
+                self.propagate(constraint)?;
+            }
+            ConstraintKind::Element {
+                values,
+                index,
+                result,
+            } => {
+                self.variables[index].on_domain_change.push(constraint);
+                self.variables[result].on_domain_change.push(constraint);
+                self.remove_below(index, 0)?;
+                self.remove_above(index, values.len() as i64 - 1)?;
+                self.propagate(constraint)?;
+            }
+            ConstraintKind::Sum { terms } => {
+                for (variable, _) in terms {
+                    self.variables[variable].on_bound_change.push(constraint);
+                }
                 self.propagate(constraint)?;
             }
         }
@@ -275,6 +335,71 @@ impl Solver {
                     }
                 }
                 if variables.iter().all(|variable| self.is_fixed(*variable)) {
+                    self.deactivate(constraint);
+                }
+            }
+            ConstraintKind::Element {
+                values,
+                index,
+                result,
+            } => {
+                if self.is_fixed(index) {
+                    self.fix(result, values[self.value(index)? as usize])?;
+                    self.deactivate(constraint);
+                } else {
+                    for position in self.values(index) {
+                        if !self.contains(result, values[position as usize]) {
+                            self.remove(index, position)?;
+                        }
+                    }
+                    if self.is_fixed(index) {
+                        self.fix(result, values[self.value(index)? as usize])?;
+                        self.deactivate(constraint);
+                    } else {
+                        let supported: HashSet<_> = self
+                            .values(index)
+                            .into_iter()
+                            .map(|position| values[position as usize])
+                            .collect();
+                        for value in self.values(result) {
+                            if !supported.contains(&value) {
+                                self.remove(result, value)?;
+                            }
+                        }
+                        if self.is_fixed(result) {
+                            self.deactivate(constraint);
+                        }
+                    }
+                }
+            }
+            ConstraintKind::Sum { terms } => {
+                let ranges: Vec<_> = terms
+                    .iter()
+                    .map(|(variable, coefficient)| {
+                        if *coefficient == 1 {
+                            (self.min(*variable), self.max(*variable))
+                        } else {
+                            (-self.max(*variable), -self.min(*variable))
+                        }
+                    })
+                    .collect();
+                let sum_min: i64 = ranges.iter().map(|range| range.0).sum();
+                let sum_max: i64 = ranges.iter().map(|range| range.1).sum();
+                if sum_min > 0 || sum_max < 0 {
+                    return Err("sum cannot reach its target".into());
+                }
+                for ((variable, coefficient), (term_min, term_max)) in terms.iter().zip(ranges) {
+                    let required_min = -(sum_max - term_max);
+                    let required_max = -(sum_min - term_min);
+                    if *coefficient == 1 {
+                        self.remove_below(*variable, required_min)?;
+                        self.remove_above(*variable, required_max)?;
+                    } else {
+                        self.remove_below(*variable, -required_max)?;
+                        self.remove_above(*variable, -required_min)?;
+                    }
+                }
+                if terms.iter().all(|(variable, _)| self.is_fixed(*variable)) {
                     self.deactivate(constraint);
                 }
             }
