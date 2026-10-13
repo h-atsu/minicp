@@ -20,6 +20,7 @@ from minicp.constraints import (
     sum_var,
 )
 from minicp.exceptions import Inconsistency
+from minicp.objective import Maximize, Minimize, Objective
 from minicp.search import DFSearch, SearchStatistics, first_unfixed
 from minicp.solver import Solver
 from minicp.state import (
@@ -55,7 +56,10 @@ __all__ = [
     "IntVar",
     "IntVarLike",
     "IsEqual",
+    "Maximize",
+    "Minimize",
     "NotEqual",
+    "Objective",
     "OffsetView",
     "OppositeView",
     "ScaleView",

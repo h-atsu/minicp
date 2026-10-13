@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 from minicp.exceptions import Inconsistency
 
 if TYPE_CHECKING:
+    from minicp.objective import Objective
     from minicp.solver import Solver
     from minicp.variable import IntVarLike
 
@@ -66,11 +67,22 @@ class DFSearch:
         self._solution_listeners.append(listener)
 
     def solve(self) -> SearchStatistics:
+        """Enumerate all solutions in the search tree."""
+
+        return self._run(None)
+
+    def optimize(self, objective: Objective) -> SearchStatistics:
+        """Run branch-and-bound search for improving solutions."""
+
+        return self._run(objective)
+
+    def _run(self, objective: Objective | None) -> SearchStatistics:
         self._statistics = SearchStatistics()
         state = self._solver.state_manager
         state.save()
         try:
-            self._dfs()
+            self._solver.fix_point()
+            self._dfs(objective)
             self._statistics.completed = True
         except Inconsistency:
             self._statistics.failures += 1
@@ -79,12 +91,14 @@ class DFSearch:
             state.restore()
         return self._statistics
 
-    def _dfs(self) -> None:
+    def _dfs(self, objective: Objective | None) -> None:
         branches = self._branching()
         if not branches:
             self._statistics.solutions += 1
             for listener in self._solution_listeners:
                 listener()
+            if objective is not None:
+                objective.tighten()
             return
 
         state = self._solver.state_manager
@@ -94,7 +108,7 @@ class DFSearch:
                 self._statistics.nodes += 1
                 branch()
                 self._solver.fix_point()
-                self._dfs()
+                self._dfs(objective)
             except Inconsistency:
                 self._statistics.failures += 1
             finally:
