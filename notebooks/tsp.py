@@ -6,10 +6,9 @@ from random import Random
 
 import plotly.graph_objects as go
 
-from minicp.constraints import circuit, element, sum_var
+from minicp import python as python_backend
+from minicp import rust as rust_backend
 from minicp.search import Branch, DFSearch
-from minicp.solver import Solver
-from minicp.variable import IntVar
 
 # %%
 # Generate a reproducible Euclidean instance. Distances are multiplied by 100
@@ -18,6 +17,7 @@ N = 15
 SEED = 42
 DISTANCE_SCALE = 100
 TIME_LIMIT_SECONDS = 10.0
+BACKEND = "rust"
 random = Random(SEED)
 coordinates = tuple((random.uniform(0, 10), random.uniform(0, 10)) for _ in range(N))
 
@@ -33,13 +33,36 @@ DISTANCE = tuple(
 )
 
 # %%
-solver = Solver()
-successors = [IntVar(solver, 0, N - 1, name=f"successor[{node}]") for node in range(N)]
-solver.post(circuit(successors))
-
-edge_distances = [element(DISTANCE[node], successors[node]) for node in range(N)]
-total_distance = sum_var(edge_distances)
-objective = solver.minimize(total_distance)
+if BACKEND == "python":
+    solver = python_backend.Solver()
+    successors = [
+        python_backend.IntVar(solver, 0, N - 1, name=f"successor[{node}]")
+        for node in range(N)
+    ]
+    solver.post(python_backend.circuit(successors))
+    edge_distances = [
+        python_backend.element(DISTANCE[node], successors[node])
+        for node in range(N)
+    ]
+    total_distance = python_backend.sum_var(edge_distances)
+    objective = solver.minimize(total_distance)
+elif BACKEND == "rust":
+    rust_solver = rust_backend.Solver()
+    rust_successors = [
+        rust_backend.IntVar(
+            rust_solver, 0, N - 1, name=f"successor[{node}]"
+        )
+        for node in range(N)
+    ]
+    rust_solver.post(rust_backend.circuit(rust_successors))
+    rust_edge_distances = [
+        rust_backend.element(list(DISTANCE[node]), rust_successors[node])
+        for node in range(N)
+    ]
+    rust_total_distance = rust_backend.sum_var(rust_edge_distances)
+    rust_objective = rust_solver.minimize(rust_total_distance)
+else:
+    raise ValueError("BACKEND must be 'python' or 'rust'")
 
 
 # %%
@@ -69,7 +92,6 @@ def farthest_first_branching() -> list[Branch]:
     return [use_edge, exclude_edge]
 
 
-search = DFSearch(solver, farthest_first_branching)
 improving_solutions: list[tuple[int, tuple[int, ...]]] = []
 
 
@@ -82,8 +104,33 @@ def record_solution() -> None:
     )
 
 
-search.on_solution(record_solution)
-statistics = search.optimize(objective, time_limit=TIME_LIMIT_SECONDS)
+if BACKEND == "python":
+    search = DFSearch(solver, farthest_first_branching)
+    search.on_solution(record_solution)
+    statistics = search.optimize(objective, time_limit=TIME_LIMIT_SECONDS)
+    objective_best_value = objective.best_value
+else:
+    value_order = [
+        sorted(range(N), key=lambda value: DISTANCE[node][value], reverse=True)
+        for node in range(N)
+    ]
+    rust_search = rust_backend.DFSearch(
+        rust_solver,
+        rust_successors,
+        value_order=value_order,
+    )
+    statistics = rust_search.optimize(
+        rust_objective,
+        time_limit=TIME_LIMIT_SECONDS,
+    )
+    improving_solutions = [
+        (
+            sum(DISTANCE[node][destination] for node, destination in enumerate(solution)),
+            tuple(solution),
+        )
+        for solution in rust_search.solutions
+    ]
+    objective_best_value = rust_objective.best_value
 
 
 # %%
@@ -106,13 +153,13 @@ best_tour = tour_from_successors(best_successors)
 print(f"Best distance: {best_distance / DISTANCE_SCALE:.2f}")
 print(f"Best tour: {best_tour}")
 print(
-    f"Search: {statistics.nodes} nodes, "
+    f"Search ({BACKEND} backend): {statistics.nodes} nodes, "
     f"{statistics.failures} failures, "
     f"{statistics.solutions} improving solutions, "
     f"{statistics.elapsed_seconds:.3f} seconds, "
     f"completed={statistics.completed}"
 )
-assert objective.best_value == best_distance
+assert objective_best_value == best_distance
 
 # %%
 # Close the tour by repeating its first node, then draw the optimal cycle.

@@ -16,8 +16,9 @@ domain = cp.SparseSet(manager, minimum=2, maximum=6)
 
 既存コードとの互換性のため、`from minicp import Solver`のようなトップレベルAPIは
 Pythonバックエンドを指します。Rust名前空間には、Python版と同じ振る舞いまで移植・検証できた
-APIだけを公開します。そのため、現時点の`minicp.rust`はソルバー全体ではなく、
-状態管理、ドメイン変数、`Solver`の器までです。制約伝播と探索は今後の移植対象です。
+APIだけを公開します。現在の`minicp.rust`はTSPに必要な状態管理、ドメイン変数、
+伝播エンジン、`AllDifferentDC`、`Circuit`、`Element1D`、`Sum`、DFS、最小化目的を
+実装しています。それ以外の制約は引き続きPython版だけで利用できます。
 
 ## セットアップ
 
@@ -101,6 +102,15 @@ uv run python notebooks/subset_sum_problem.py
 uv run python notebooks/stable_matching.py
 uv run python notebooks/sudoku.py
 uv run python notebooks/circuit.py
+uv run python notebooks/tsp.py
+```
+
+`notebooks/tsp.py`の`BACKEND`を`"python"`または`"rust"`にすると、同じ
+`Circuit`、`Element1D`、`Sum`、branch-and-boundモデルを各backendで実行できます。
+性能を比較するときはRust拡張をrelease buildします。
+
+```console
+uv run maturin develop --release
 uv run python notebooks/tsp.py
 ```
 

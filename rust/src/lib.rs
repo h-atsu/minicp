@@ -5,6 +5,7 @@ mod sparse_set;
 mod state;
 mod state_sparse_set;
 
+use bindings::search::{PyDFSearch, PyMinimize, PySearchStatistics};
 use bindings::solver::{
     PyBoolVar, PyConstraint, PyIntVar, PySolver, all_different, circuit, element, equal, not_equal,
     sum_var,
@@ -26,6 +27,9 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyIntVar>()?;
     module.add_class::<PyBoolVar>()?;
     module.add_class::<PyConstraint>()?;
+    module.add_class::<PyMinimize>()?;
+    module.add_class::<PySearchStatistics>()?;
+    module.add_class::<PyDFSearch>()?;
     module.add_function(wrap_pyfunction!(not_equal, module)?)?;
     module.add_function(wrap_pyfunction!(equal, module)?)?;
     module.add_function(wrap_pyfunction!(all_different, module)?)?;

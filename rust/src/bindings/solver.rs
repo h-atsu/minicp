@@ -4,6 +4,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::Inconsistency;
+use crate::bindings::search::PyMinimize;
 use crate::bindings::state::PyStateManager;
 use crate::solver::{ConstraintId, SharedSolver, Solver, VariableId};
 
@@ -42,6 +43,11 @@ impl PySolver {
             .borrow_mut()
             .fix_point()
             .map_err(Inconsistency::new_err)
+    }
+
+    fn minimize(&self, variable: PyRef<'_, PyIntVar>) -> PyResult<PyMinimize> {
+        ensure_same_solver(&self.inner, &variable.solver)?;
+        Ok(PyMinimize::new(self.inner.clone(), variable.id))
     }
 }
 

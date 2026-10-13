@@ -1,3 +1,4 @@
+pub(crate) mod search;
 pub(crate) mod solver;
 pub(crate) mod sparse_set;
 pub(crate) mod state;

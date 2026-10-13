@@ -3,8 +3,11 @@
 from minicp._rust import (
     BoolVar,
     Constraint,
+    DFSearch,
     Inconsistency,
     IntVar,
+    Minimize,
+    SearchStatistics,
     Solver,
     StateInt,
     StateManager,
@@ -20,8 +23,11 @@ from minicp._rust import StateSparseSet as SparseSet
 __all__ = [
     "BoolVar",
     "Constraint",
+    "DFSearch",
     "Inconsistency",
     "IntVar",
+    "Minimize",
+    "SearchStatistics",
     "Solver",
     "SparseSet",
     "StateInt",

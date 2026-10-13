@@ -71,6 +71,7 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - maximum matching、SCC、自由値からの到達探索
 - domain-consistentな`AllDifferentDC`と可逆なsubtour情報を持つ`Circuit`
 - domain-consistentな`Element1D`とbound-consistentな`Sum`
+- 変数列と値順序を受け取る可逆DFS、最小化目的関数、探索時間制限
 - `minicp.rust`から公開する、Python版と共通名の状態管理API
 - Python版との共通テストで、状態保存・復元と集合操作を比較
 
@@ -166,6 +167,10 @@ StateManager
   backend固有のPython補助コードが複数に増えるまでは、空に近いpackage階層を作らない。
 - Rust名前空間では移植済みのAPIだけを公開し、未移植機能をPythonへ暗黙に
   フォールバックさせない。これにより、どちらの実装を学習・計測しているかを明確にする。
+- Rustの`Sum`は現段階ではfixed prefixを持たず、伝播ごとに全項の境界を再計算する。
+  Python版と同じbound consistencyを保ちつつ、最初の移植を読みやすくする意図的な差である。
+- Rustの`DFSearch`は探索中のPython callbackを避けるため、探索対象変数と値順序を受け取り、
+  solutionを不変なsnapshotとして蓄積する。探索木のsave/restoreとbranch-and-boundはRust内で行う。
 - `StateManager`、`StateInt`と、それらに依存する`SparseSet`、
   `StateSparseBitSet`は`state` packageへまとめる。
 - 制約は`constraints` packageで概念ごとのmoduleに分け、基底クラスだけを`base`に置く。
