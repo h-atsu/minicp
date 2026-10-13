@@ -21,6 +21,8 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - 素朴なtrailing方式の`StateManager`
 - `StateInt`
 - 可逆な`SparseSet`
+- 可逆なドメインを持つ`IntVar`と`BoolVar`
+- 状態管理を所有する`Solver`（制約伝播キューは未移植）
 - 非ゼロwordを可逆なprefixで管理する`StateSparseBitSet`
 - 可逆な購読リストとしての`StateStack`
 - 可逆状態と可逆データ構造をまとめる`state` package

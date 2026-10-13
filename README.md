@@ -16,7 +16,8 @@ domain = cp.SparseSet(manager, minimum=2, maximum=6)
 
 既存コードとの互換性のため、`from minicp import Solver`のようなトップレベルAPIは
 Pythonバックエンドを指します。Rust名前空間には、Python版と同じ振る舞いまで移植・検証できた
-APIだけを公開します。そのため、現時点の`minicp.rust`はソルバー全体ではなく状態管理層だけです。
+APIだけを公開します。そのため、現時点の`minicp.rust`はソルバー全体ではなく、
+状態管理、ドメイン変数、`Solver`の器までです。制約伝播と探索は今後の移植対象です。
 
 ## セットアップ
 

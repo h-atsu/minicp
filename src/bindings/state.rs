@@ -8,13 +8,17 @@ pub(crate) struct PyStateManager {
     pub(crate) inner: SharedStateManager,
 }
 
+impl PyStateManager {
+    pub(crate) fn from_shared(inner: SharedStateManager) -> Self {
+        Self { inner }
+    }
+}
+
 #[pymethods]
 impl PyStateManager {
     #[new]
     fn new() -> Self {
-        Self {
-            inner: StateManager::shared(),
-        }
+        Self::from_shared(StateManager::shared())
     }
 
     #[getter]

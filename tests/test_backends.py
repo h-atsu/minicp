@@ -39,8 +39,33 @@ class SparseSetLike(Protocol):
     def values(self) -> list[int]: ...
 
 
+class IntVarLike(Protocol):
+    @property
+    def min(self) -> int: ...
+
+    @property
+    def max(self) -> int: ...
+
+    @property
+    def size(self) -> int: ...
+
+    @property
+    def is_fixed(self) -> bool: ...
+
+    @property
+    def value(self) -> int: ...
+
+    def values(self) -> list[int]: ...
+    def contains(self, value: int) -> bool: ...
+    def remove(self, value: int) -> None: ...
+    def fix(self, value: int) -> None: ...
+    def remove_below(self, value: int) -> None: ...
+    def remove_above(self, value: int) -> None: ...
+
+
 StateFactory = Callable[[], tuple[StateManagerLike, StateIntLike]]
 SparseSetFactory = Callable[[], tuple[StateManagerLike, SparseSetLike]]
+VariableFactory = Callable[[], tuple[StateManagerLike, IntVarLike]]
 
 
 def make_python_state() -> tuple[StateManagerLike, StateIntLike]:
@@ -61,6 +86,16 @@ def make_python_sparse_set() -> tuple[StateManagerLike, SparseSetLike]:
 def make_rust_sparse_set() -> tuple[StateManagerLike, SparseSetLike]:
     manager = rust_backend.StateManager()
     return manager, rust_backend.SparseSet(manager, 2, 7)
+
+
+def make_python_variable() -> tuple[StateManagerLike, IntVarLike]:
+    solver = python_backend.Solver()
+    return solver.state_manager, python_backend.IntVar(solver, 2, 7, "x")
+
+
+def make_rust_variable() -> tuple[StateManagerLike, IntVarLike]:
+    solver = rust_backend.Solver()
+    return solver.state_manager, rust_backend.IntVar(solver, 2, 7, "x")
 
 
 @pytest.mark.parametrize("factory", [make_python_state, make_rust_state])
@@ -102,6 +137,32 @@ def test_backend_sparse_set_restores_bulk_changes(
     assert set(sparse_set.values()) == {2, 3, 4, 5, 6, 7}
     assert sparse_set.min == 2
     assert sparse_set.max == 7
+
+
+@pytest.mark.parametrize("factory", [make_python_variable, make_rust_variable])
+def test_backend_variable_domain_is_reversible(factory: VariableFactory) -> None:
+    manager, variable = factory()
+
+    manager.save()
+    variable.remove(3)
+    variable.remove_below(4)
+    variable.remove_above(6)
+    assert set(variable.values()) == {4, 5, 6}
+    variable.fix(5)
+    assert variable.is_fixed
+    assert variable.value == 5
+    manager.restore()
+
+    assert variable.size == 6
+    assert set(variable.values()) == {2, 3, 4, 5, 6, 7}
+
+
+def test_rust_variable_reports_inconsistency() -> None:
+    solver = rust_backend.Solver()
+    variable = rust_backend.IntVar(solver, 1, 2)
+
+    with pytest.raises(rust_backend.Inconsistency, match="absent value"):
+        variable.fix(3)
 
 
 def test_top_level_api_remains_the_python_backend() -> None:
