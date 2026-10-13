@@ -2,7 +2,7 @@
 
 MiniCPの講義を参考にしながら、制約プログラミングソルバーをPythonとRustで実装する学習用プロジェクトです。
 
-まず読みやすいPython実装を作り、同じ振る舞いをする部品をRustとPyO3で実装して比較します。Python版は講義10までの主要機能、Rust版はバックトラック可能な整数状態とSparse Setを実装しています。
+まず読みやすいPython実装を作り、同じ振る舞いをする部品をRustとPyO3で実装して比較します。Python版は講義10までの主要機能、Rust版はTSPモデルに必要な状態管理、制約伝播、探索、最小化までを実装しています。
 
 バックエンドを明示する場合は、同じ名前を持つ名前空間を選びます。
 
@@ -64,6 +64,25 @@ uv run python -c "from minicp import rust as cp; m = cp.StateManager(); print(cp
 ```
 
 JupyterでRust拡張を使用している場合、再ビルド後も古い共有ライブラリが読み込まれていることがあります。その場合はJupyterカーネルを再起動します。
+
+### Rustソースの構成
+
+Rust側もPython側と同様に、学習対象の概念ごとにファイルを分けています。
+
+```text
+rust/src/
+├── solver.rs, variable.rs
+├── search.rs, objective.rs
+├── constraints.rs + constraints/
+├── algorithms.rs  + algorithms/
+├── state.rs       + state/
+└── bindings.rs    + bindings/
+```
+
+`solver`、`constraints`、`search`などはPyO3に依存しないsolver本体です。
+`bindings`はそれらを`minicp._rust`へ公開する薄い層です。複数ファイルのmoduleには
+`constraints/mod.rs`ではなく、`constraints.rs`を親にするRust 2018以降の形式を
+統一して使用しています。
 
 ## Python版Sparse Set
 

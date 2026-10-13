@@ -3,6 +3,12 @@
 //! This deliberately mirrors the readable Python reference implementation:
 //! every effective change below a checkpoint records the previous value.
 
+mod sparse_set;
+mod state_sparse_set;
+
+pub(crate) use sparse_set::SparseSet;
+pub(crate) use state_sparse_set::StateSparseSet;
+
 use std::cell::RefCell;
 use std::rc::Rc;
 

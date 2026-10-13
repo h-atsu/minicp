@@ -1,6 +1,6 @@
 //! Reversible sparse set using reversible size and bounds.
 
-use crate::sparse_set::SparseSetError;
+use super::sparse_set::SparseSetError;
 use crate::state::{SharedStateManager, StateInt};
 
 pub struct StateSparseSet {

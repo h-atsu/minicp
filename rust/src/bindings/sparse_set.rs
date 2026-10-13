@@ -1,7 +1,7 @@
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
-use crate::sparse_set::SparseSet;
+use crate::state::SparseSet;
 
 #[pyclass(name = "SparseSet")]
 pub(crate) struct PySparseSet {

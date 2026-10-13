@@ -10,9 +10,10 @@ MiniCPの講義を通して、制約プログラミングソルバーの動作�
 
 ## Current course progress
 
-MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆状態、ドメイン、
-変数通知、制約伝播、fix-point、深さ優先探索を使ってN-Queensを解ける段階から、
-講義06のCircuit制約へ進んでいる。
+MiniCPの講義10まで視聴済み。Python版は可逆状態、制約伝播、探索に加え、
+AllDifferent、Circuit、Element、Sum、Table、Automaton、目的関数まで実装している。
+Rust版はPython版を参照しながら、TSPに必要な状態管理、制約、探索、最小化まで
+移植した段階にある。
 
 ## Implemented
 
@@ -84,6 +85,26 @@ src/minicp/       Python参照実装とPython向け名前空間
 rust/src/         Rust実装とPyO3 binding
 tests/            Python単体テストとバックエンド共有テスト
 notebooks/        モデルと可視化の実例
+```
+
+Rust実装も概念単位で追えるよう、Python版と対応する責務ごとに分割する。
+親moduleには現在のRustで一般的な`foo.rs`形式を使い、同じmoduleを表す
+`foo/mod.rs`とは併用しない。
+
+```text
+rust/src/
+├── solver.rs            arenaと伝播キュー
+├── variable.rs          IntVar/BoolVarのドメイン操作と通知
+├── search.rs            可逆DFSと探索統計
+├── objective.rs         最小化目的
+├── constraints.rs       制約moduleと伝播dispatch
+├── constraints/         個々の制約
+├── algorithms.rs        制約から独立したアルゴリズム
+├── algorithms/          matchingとgraph探索
+├── state.rs             trailing方式の可逆状態
+├── state/               可逆データ構造
+├── bindings.rs          PyO3 moduleの組み立て
+└── bindings/            Python公開用の薄いwrapper
 ```
 
 ```text
@@ -171,6 +192,11 @@ StateManager
   Python版と同じbound consistencyを保ちつつ、最初の移植を読みやすくする意図的な差である。
 - Rustの`DFSearch`は探索中のPython callbackを避けるため、探索対象変数と値順序を受け取り、
   solutionを不変なsnapshotとして蓄積する。探索木のsave/restoreとbranch-and-boundはRust内で行う。
+- Rustのsolver本体、変数、制約、探索、目的関数はPyO3に依存しないmoduleとし、
+  `bindings`にはPythonとの型変換とAPI公開だけを置く。内部moduleは必要な範囲だけ
+  `pub(crate)`で共有し、ファイル分割をPython公開APIへ露出させない。
+- Rustの複数ファイルmoduleは`constraints.rs`と`constraints/`のような現在の形式で表す。
+  `constraints/mod.rs`は同じmoduleを表す代替形式なので併置しない。
 - `StateManager`、`StateInt`と、それらに依存する`SparseSet`、
   `StateSparseBitSet`は`state` packageへまとめる。
 - 制約は`constraints` packageで概念ごとのmoduleに分け、基底クラスだけを`base`に置く。
@@ -187,7 +213,7 @@ StateManager
 
 ## Possible next steps
 
-講義06の次の候補:
+講義10までを踏まえた次の候補:
 
 1. TSPに対するLarge Neighborhood Search
 2. 講義07のCumulative制約

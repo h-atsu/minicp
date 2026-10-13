@@ -1,18 +1,21 @@
 mod algorithms;
 mod bindings;
+mod constraints;
+mod objective;
+mod search;
 mod solver;
-mod sparse_set;
 mod state;
-mod state_sparse_set;
+mod variable;
 
-use bindings::search::{PyDFSearch, PyMinimize, PySearchStatistics};
-use bindings::solver::{
-    PyBoolVar, PyConstraint, PyIntVar, PySolver, all_different, circuit, element, equal, not_equal,
-    sum_var,
+use bindings::constraints::{
+    PyConstraint, all_different, circuit, element, equal, not_equal, sum_var,
 };
+use bindings::search::{PyDFSearch, PyMinimize, PySearchStatistics};
+use bindings::solver::PySolver;
 use bindings::sparse_set::PySparseSet;
 use bindings::state::{PyStateInt, PyStateManager};
 use bindings::state_sparse_set::PyStateSparseSet;
+use bindings::variable::{PyBoolVar, PyIntVar};
 use pyo3::prelude::*;
 
 pyo3::create_exception!(_rust, Inconsistency, pyo3::exceptions::PyException);

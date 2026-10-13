@@ -1,69 +1,23 @@
-//! Arena-based variables, constraints, and propagation queue.
+//! Arena ownership and propagation-queue bookkeeping.
 
 use std::cell::RefCell;
-use std::collections::{HashSet, VecDeque};
+use std::collections::VecDeque;
 use std::rc::Rc;
 
-use crate::algorithms::supported_all_different_edges;
-use crate::state::{SharedStateManager, StateInt, StateManager, StateStack};
-use crate::state_sparse_set::StateSparseSet;
+use crate::constraints::{Constraint, ConstraintKind};
+use crate::state::{SharedStateManager, StateInt, StateManager};
+use crate::variable::Variable;
 
 pub type VariableId = usize;
 pub type ConstraintId = usize;
 pub type SharedSolver = Rc<RefCell<Solver>>;
 pub type SolverResult<T> = Result<T, String>;
 
-struct Variable {
-    domain: StateSparseSet,
-    name: Option<String>,
-    on_fix: StateStack<ConstraintId>,
-    on_domain_change: StateStack<ConstraintId>,
-    on_bound_change: StateStack<ConstraintId>,
-}
-
-#[derive(Clone)]
-enum ConstraintKind {
-    NotEqual {
-        x: VariableId,
-        y: VariableId,
-        offset: i64,
-    },
-    Equal {
-        x: VariableId,
-        y: VariableId,
-    },
-    AllDifferent {
-        variables: Vec<VariableId>,
-    },
-    Circuit {
-        variables: Vec<VariableId>,
-        destination: Vec<StateInt>,
-        origin: Vec<StateInt>,
-        length: Vec<StateInt>,
-        processed: Vec<StateInt>,
-    },
-    Element {
-        values: Vec<i64>,
-        index: VariableId,
-        result: VariableId,
-    },
-    Sum {
-        terms: Vec<(VariableId, i64)>,
-    },
-}
-
-struct Constraint {
-    kind: ConstraintKind,
-    active: StateInt,
-    scheduled: bool,
-    posted: bool,
-}
-
 pub struct Solver {
     pub state_manager: SharedStateManager,
-    variables: Vec<Variable>,
-    constraints: Vec<Constraint>,
-    queue: VecDeque<ConstraintId>,
+    pub(crate) variables: Vec<Variable>,
+    pub(crate) constraints: Vec<Constraint>,
+    pub(crate) queue: VecDeque<ConstraintId>,
 }
 
 impl Solver {
@@ -80,96 +34,7 @@ impl Solver {
         }))
     }
 
-    pub fn new_variable(
-        &mut self,
-        minimum: i64,
-        maximum: i64,
-        name: Option<String>,
-    ) -> SolverResult<VariableId> {
-        let domain = StateSparseSet::new(self.state_manager.clone(), minimum, maximum)
-            .map_err(|error| error.to_string())?;
-        let id = self.variables.len();
-        self.variables.push(Variable {
-            domain,
-            name,
-            on_fix: StateStack::new(self.state_manager.clone()),
-            on_domain_change: StateStack::new(self.state_manager.clone()),
-            on_bound_change: StateStack::new(self.state_manager.clone()),
-        });
-        Ok(id)
-    }
-
-    pub fn new_not_equal(&mut self, x: VariableId, y: VariableId, offset: i64) -> ConstraintId {
-        self.new_constraint(ConstraintKind::NotEqual { x, y, offset })
-    }
-
-    pub fn new_equal(&mut self, x: VariableId, y: VariableId) -> ConstraintId {
-        self.new_constraint(ConstraintKind::Equal { x, y })
-    }
-
-    pub fn new_all_different(&mut self, variables: Vec<VariableId>) -> SolverResult<ConstraintId> {
-        if variables.is_empty() {
-            return Err("all-different requires at least one variable".into());
-        }
-        Ok(self.new_constraint(ConstraintKind::AllDifferent { variables }))
-    }
-
-    pub fn new_circuit(&mut self, variables: Vec<VariableId>) -> SolverResult<ConstraintId> {
-        if variables.len() < 2 {
-            return Err("circuit requires at least two successors".into());
-        }
-        let count = variables.len();
-        let make_integers = |values: Vec<i64>| {
-            values
-                .into_iter()
-                .map(|value| StateInt::new(self.state_manager.clone(), value))
-                .collect()
-        };
-        Ok(self.new_constraint(ConstraintKind::Circuit {
-            variables,
-            destination: make_integers((0..count as i64).collect()),
-            origin: make_integers((0..count as i64).collect()),
-            length: make_integers(vec![0; count]),
-            processed: make_integers(vec![0; count]),
-        }))
-    }
-
-    pub fn new_element(&mut self, values: Vec<i64>, index: VariableId) -> SolverResult<VariableId> {
-        if values.is_empty() {
-            return Err("element requires at least one value".into());
-        }
-        let result = self.new_variable(
-            *values.iter().min().unwrap(),
-            *values.iter().max().unwrap(),
-            None,
-        )?;
-        let constraint = self.new_constraint(ConstraintKind::Element {
-            values,
-            index,
-            result,
-        });
-        self.post(constraint)?;
-        Ok(result)
-    }
-
-    pub fn new_sum_variable(&mut self, variables: Vec<VariableId>) -> SolverResult<VariableId> {
-        if variables.is_empty() {
-            return Err("sum requires at least one variable".into());
-        }
-        let minimum = variables.iter().map(|variable| self.min(*variable)).sum();
-        let maximum = variables.iter().map(|variable| self.max(*variable)).sum();
-        let result = self.new_variable(minimum, maximum, None)?;
-        let mut terms: Vec<_> = variables
-            .into_iter()
-            .map(|variable| (variable, 1))
-            .collect();
-        terms.push((result, -1));
-        let constraint = self.new_constraint(ConstraintKind::Sum { terms });
-        self.post(constraint)?;
-        Ok(result)
-    }
-
-    fn new_constraint(&mut self, kind: ConstraintKind) -> ConstraintId {
+    pub(crate) fn new_constraint(&mut self, kind: ConstraintKind) -> ConstraintId {
         let id = self.constraints.len();
         self.constraints.push(Constraint {
             kind,
@@ -180,238 +45,11 @@ impl Solver {
         id
     }
 
-    pub fn post(&mut self, constraint: ConstraintId) -> SolverResult<()> {
-        if self.constraints[constraint].posted {
-            return Err("constraint has already been posted".into());
-        }
-        self.constraints[constraint].posted = true;
-        match self.constraints[constraint].kind.clone() {
-            ConstraintKind::NotEqual { x, y, .. } => {
-                if self.is_fixed(x) || self.is_fixed(y) {
-                    self.propagate(constraint)?;
-                } else {
-                    self.variables[x].on_fix.push(constraint);
-                    self.variables[y].on_fix.push(constraint);
-                }
-            }
-            ConstraintKind::Equal { x, y } => {
-                if !self.is_fixed(x) && !self.is_fixed(y) {
-                    self.variables[x].on_domain_change.push(constraint);
-                    self.variables[y].on_domain_change.push(constraint);
-                }
-                self.propagate(constraint)?;
-            }
-            ConstraintKind::AllDifferent { variables } => {
-                for variable in variables {
-                    self.variables[variable].on_domain_change.push(constraint);
-                }
-                self.propagate(constraint)?;
-            }
-            ConstraintKind::Circuit { variables, .. } => {
-                let count = variables.len() as i64;
-                for (node, variable) in variables.iter().copied().enumerate() {
-                    self.remove_below(variable, 0)?;
-                    self.remove_above(variable, count - 1)?;
-                    self.remove(variable, node as i64)?;
-                    self.variables[variable].on_fix.push(constraint);
-                }
-                let all_different = self.new_all_different(variables)?;
-                self.post(all_different)?;
-                self.propagate(constraint)?;
-            }
-            ConstraintKind::Element {
-                values,
-                index,
-                result,
-            } => {
-                self.variables[index].on_domain_change.push(constraint);
-                self.variables[result].on_domain_change.push(constraint);
-                self.remove_below(index, 0)?;
-                self.remove_above(index, values.len() as i64 - 1)?;
-                self.propagate(constraint)?;
-            }
-            ConstraintKind::Sum { terms } => {
-                for (variable, _) in terms {
-                    self.variables[variable].on_bound_change.push(constraint);
-                }
-                self.propagate(constraint)?;
-            }
-        }
-        self.fix_point()
-    }
-
-    pub fn fix_point(&mut self) -> SolverResult<()> {
-        while let Some(constraint) = self.queue.pop_front() {
-            self.constraints[constraint].scheduled = false;
-            if self.constraints[constraint].active.value() != 0 {
-                if let Err(error) = self.propagate(constraint) {
-                    self.clear_queue();
-                    return Err(error);
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn propagate(&mut self, constraint: ConstraintId) -> SolverResult<()> {
-        match self.constraints[constraint].kind.clone() {
-            ConstraintKind::NotEqual { x, y, offset } => {
-                if self.is_fixed(x) {
-                    self.remove(y, self.value(x)? - offset)?;
-                    self.deactivate(constraint);
-                } else if self.is_fixed(y) {
-                    self.remove(x, self.value(y)? + offset)?;
-                    self.deactivate(constraint);
-                }
-            }
-            ConstraintKind::Equal { x, y } => {
-                if self.is_fixed(x) {
-                    self.fix(y, self.value(x)?)?;
-                    self.deactivate(constraint);
-                } else if self.is_fixed(y) {
-                    self.fix(x, self.value(y)?)?;
-                    self.deactivate(constraint);
-                } else {
-                    let right: HashSet<_> = self.values(y).into_iter().collect();
-                    for value in self.values(x) {
-                        if !right.contains(&value) {
-                            self.remove(x, value)?;
-                        }
-                    }
-                    let left: HashSet<_> = self.values(x).into_iter().collect();
-                    for value in self.values(y) {
-                        if !left.contains(&value) {
-                            self.remove(y, value)?;
-                        }
-                    }
-                    if self.is_fixed(x) {
-                        self.fix(y, self.value(x)?)?;
-                        self.deactivate(constraint);
-                    } else if self.is_fixed(y) {
-                        self.fix(x, self.value(y)?)?;
-                        self.deactivate(constraint);
-                    }
-                }
-            }
-            ConstraintKind::AllDifferent { variables } => {
-                let adjacency: Vec<_> = variables
-                    .iter()
-                    .map(|variable| self.values(*variable))
-                    .collect();
-                let supported = supported_all_different_edges(&adjacency)
-                    .ok_or_else(|| "all-different has no matching".to_string())?;
-                for (variable, supported_values) in variables.iter().zip(supported) {
-                    for value in self.values(*variable) {
-                        if !supported_values.contains(&value) {
-                            self.remove(*variable, value)?;
-                        }
-                    }
-                }
-                if variables.iter().all(|variable| self.is_fixed(*variable)) {
-                    self.deactivate(constraint);
-                }
-            }
-            ConstraintKind::Circuit {
-                variables,
-                destination,
-                origin,
-                length,
-                processed,
-            } => {
-                for (node, variable) in variables.iter().copied().enumerate() {
-                    if self.is_fixed(variable) && processed[node].value() == 0 {
-                        let successor = self.value(variable)? as usize;
-                        let path_origin = origin[node].value() as usize;
-                        let path_destination = destination[successor].value() as usize;
-                        let path_length =
-                            length[path_origin].value() + length[successor].value() + 1;
-                        destination[path_origin].set(path_destination as i64);
-                        origin[path_destination].set(path_origin as i64);
-                        length[path_origin].set(path_length);
-                        processed[node].set(1);
-                        if path_length < variables.len() as i64 - 1 {
-                            self.remove(variables[path_destination], path_origin as i64)?;
-                        }
-                    }
-                }
-                if variables.iter().all(|variable| self.is_fixed(*variable)) {
-                    self.deactivate(constraint);
-                }
-            }
-            ConstraintKind::Element {
-                values,
-                index,
-                result,
-            } => {
-                if self.is_fixed(index) {
-                    self.fix(result, values[self.value(index)? as usize])?;
-                    self.deactivate(constraint);
-                } else {
-                    for position in self.values(index) {
-                        if !self.contains(result, values[position as usize]) {
-                            self.remove(index, position)?;
-                        }
-                    }
-                    if self.is_fixed(index) {
-                        self.fix(result, values[self.value(index)? as usize])?;
-                        self.deactivate(constraint);
-                    } else {
-                        let supported: HashSet<_> = self
-                            .values(index)
-                            .into_iter()
-                            .map(|position| values[position as usize])
-                            .collect();
-                        for value in self.values(result) {
-                            if !supported.contains(&value) {
-                                self.remove(result, value)?;
-                            }
-                        }
-                        if self.is_fixed(result) {
-                            self.deactivate(constraint);
-                        }
-                    }
-                }
-            }
-            ConstraintKind::Sum { terms } => {
-                let ranges: Vec<_> = terms
-                    .iter()
-                    .map(|(variable, coefficient)| {
-                        if *coefficient == 1 {
-                            (self.min(*variable), self.max(*variable))
-                        } else {
-                            (-self.max(*variable), -self.min(*variable))
-                        }
-                    })
-                    .collect();
-                let sum_min: i64 = ranges.iter().map(|range| range.0).sum();
-                let sum_max: i64 = ranges.iter().map(|range| range.1).sum();
-                if sum_min > 0 || sum_max < 0 {
-                    return Err("sum cannot reach its target".into());
-                }
-                for ((variable, coefficient), (term_min, term_max)) in terms.iter().zip(ranges) {
-                    let required_min = -(sum_max - term_max);
-                    let required_max = -(sum_min - term_min);
-                    if *coefficient == 1 {
-                        self.remove_below(*variable, required_min)?;
-                        self.remove_above(*variable, required_max)?;
-                    } else {
-                        self.remove_below(*variable, -required_max)?;
-                        self.remove_above(*variable, -required_min)?;
-                    }
-                }
-                if terms.iter().all(|(variable, _)| self.is_fixed(*variable)) {
-                    self.deactivate(constraint);
-                }
-            }
-        }
-        Ok(())
-    }
-
-    fn deactivate(&mut self, constraint: ConstraintId) {
+    pub(crate) fn deactivate(&mut self, constraint: ConstraintId) {
         self.constraints[constraint].active.set(0);
     }
 
-    fn schedule(&mut self, constraint: ConstraintId) {
+    pub(crate) fn schedule(&mut self, constraint: ConstraintId) {
         let data = &mut self.constraints[constraint];
         if data.active.value() != 0 && !data.scheduled {
             data.scheduled = true;
@@ -419,127 +57,10 @@ impl Solver {
         }
     }
 
-    fn clear_queue(&mut self) {
+    pub(crate) fn clear_queue(&mut self) {
         while let Some(constraint) = self.queue.pop_front() {
             self.constraints[constraint].scheduled = false;
         }
-    }
-
-    pub fn min(&self, variable: VariableId) -> i64 {
-        self.variables[variable]
-            .domain
-            .min()
-            .expect("non-empty domain")
-    }
-    pub fn max(&self, variable: VariableId) -> i64 {
-        self.variables[variable]
-            .domain
-            .max()
-            .expect("non-empty domain")
-    }
-    pub fn size(&self, variable: VariableId) -> usize {
-        self.variables[variable].domain.size()
-    }
-    pub fn is_fixed(&self, variable: VariableId) -> bool {
-        self.size(variable) == 1
-    }
-    pub fn value(&self, variable: VariableId) -> SolverResult<i64> {
-        self.is_fixed(variable)
-            .then(|| self.min(variable))
-            .ok_or_else(|| "variable is not fixed".into())
-    }
-    pub fn values(&self, variable: VariableId) -> Vec<i64> {
-        self.variables[variable].domain.values().collect()
-    }
-    pub fn contains(&self, variable: VariableId, value: i64) -> bool {
-        self.variables[variable].domain.contains(value)
-    }
-
-    pub fn remove(&mut self, variable: VariableId, value: i64) -> SolverResult<()> {
-        if !self.contains(variable, value) {
-            return Ok(());
-        }
-        let (old_size, old_min, old_max) =
-            (self.size(variable), self.min(variable), self.max(variable));
-        self.variables[variable].domain.remove(value);
-        if self.size(variable) == 0 {
-            return Err(format!("removing {value} emptied {}", self.label(variable)));
-        }
-        self.notify_change(variable, old_size, old_min, old_max);
-        Ok(())
-    }
-
-    pub fn fix(&mut self, variable: VariableId, value: i64) -> SolverResult<()> {
-        if !self.contains(variable, value) {
-            return Err(format!(
-                "cannot fix {} to absent value {value}",
-                self.label(variable)
-            ));
-        }
-        if self.is_fixed(variable) {
-            return Ok(());
-        }
-        let (old_size, old_min, old_max) =
-            (self.size(variable), self.min(variable), self.max(variable));
-        for candidate in self.values(variable) {
-            if candidate != value {
-                self.variables[variable].domain.remove(candidate);
-            }
-        }
-        self.notify_change(variable, old_size, old_min, old_max);
-        Ok(())
-    }
-
-    pub fn remove_below(&mut self, variable: VariableId, value: i64) -> SolverResult<()> {
-        let (old_size, old_min, old_max) =
-            (self.size(variable), self.min(variable), self.max(variable));
-        if !self.variables[variable].domain.remove_below(value) {
-            return Ok(());
-        }
-        if self.size(variable) == 0 {
-            return Err(format!(
-                "removing values below {value} emptied {}",
-                self.label(variable)
-            ));
-        }
-        self.notify_change(variable, old_size, old_min, old_max);
-        Ok(())
-    }
-
-    pub fn remove_above(&mut self, variable: VariableId, value: i64) -> SolverResult<()> {
-        let (old_size, old_min, old_max) =
-            (self.size(variable), self.min(variable), self.max(variable));
-        if !self.variables[variable].domain.remove_above(value) {
-            return Ok(());
-        }
-        if self.size(variable) == 0 {
-            return Err(format!(
-                "removing values above {value} emptied {}",
-                self.label(variable)
-            ));
-        }
-        self.notify_change(variable, old_size, old_min, old_max);
-        Ok(())
-    }
-
-    fn notify_change(&mut self, variable: VariableId, old_size: usize, old_min: i64, old_max: i64) {
-        let mut listeners = self.variables[variable].on_domain_change.values();
-        if self.min(variable) != old_min || self.max(variable) != old_max {
-            listeners.extend(self.variables[variable].on_bound_change.values());
-        }
-        if old_size > 1 && self.is_fixed(variable) {
-            listeners.extend(self.variables[variable].on_fix.values());
-        }
-        for constraint in listeners {
-            self.schedule(constraint);
-        }
-    }
-
-    pub fn name(&self, variable: VariableId) -> Option<&str> {
-        self.variables[variable].name.as_deref()
-    }
-    fn label(&self, variable: VariableId) -> &str {
-        self.name(variable).unwrap_or("IntVar")
     }
 }
 
@@ -555,8 +76,8 @@ mod tests {
             let mut inner = solver.borrow_mut();
             let x = inner.new_variable(1, 3, None).unwrap();
             let y = inner.new_variable(1, 3, None).unwrap();
-            let c = inner.new_not_equal(x, y, 0);
-            inner.post(c).unwrap();
+            let constraint = inner.new_not_equal(x, y, 0);
+            inner.post(constraint).unwrap();
             (x, y)
         };
         solver.borrow().state_manager.borrow_mut().save();
@@ -578,8 +99,8 @@ mod tests {
         let mut inner = solver.borrow_mut();
         let x = inner.new_variable(1, 3, None).unwrap();
         let y = inner.new_variable(2, 4, None).unwrap();
-        let c = inner.new_equal(x, y);
-        inner.post(c).unwrap();
+        let constraint = inner.new_equal(x, y);
+        inner.post(constraint).unwrap();
         assert_eq!(
             inner.values(x).into_iter().collect::<HashSet<_>>(),
             HashSet::from([2, 3])

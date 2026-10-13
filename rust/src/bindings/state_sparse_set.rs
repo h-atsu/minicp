@@ -2,7 +2,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::bindings::state::PyStateManager;
-use crate::state_sparse_set::StateSparseSet;
+use crate::state::StateSparseSet;
 
 #[pyclass(unsendable, name = "StateSparseSet")]
 pub(crate) struct PyStateSparseSet {
