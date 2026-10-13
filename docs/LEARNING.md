@@ -157,6 +157,8 @@ StateManager
 - Python実装を読みやすい参照実装とし、Rustは理解後の移植先とする。
 - バックエンドを明示するときは`minicp.python`と`minicp.rust`を使う。既存コードとの
   互換性のためトップレベル`minicp`はPython版を指し、`minicp._rust`はPyO3の内部APIとする。
+- `minicp.python`と`minicp.rust`は現時点ではre-exportだけを行う単一moduleとする。
+  backend固有のPython補助コードが複数に増えるまでは、空に近いpackage階層を作らない。
 - Rust名前空間では移植済みのAPIだけを公開し、未移植機能をPythonへ暗黙に
   フォールバックさせない。これにより、どちらの実装を学習・計測しているかを明確にする。
 - `StateManager`、`StateInt`と、それらに依存する`SparseSet`、
