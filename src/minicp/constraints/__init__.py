@@ -7,6 +7,7 @@ from minicp.constraints.all_different import (
 )
 from minicp.constraints.automaton import Automaton
 from minicp.constraints.base import Constraint
+from minicp.constraints.circuit import Circuit, circuit
 from minicp.constraints.element import Element1D, element
 from minicp.constraints.equality import Equal, IsEqual, equal, is_equal
 from minicp.constraints.not_equal import NotEqual, not_equal
@@ -17,6 +18,7 @@ __all__ = [
     "AllDifferentBinary",
     "AllDifferentDC",
     "Automaton",
+    "Circuit",
     "Constraint",
     "Element1D",
     "Equal",
@@ -26,6 +28,7 @@ __all__ = [
     "TableCT",
     "TableDecomp",
     "all_different",
+    "circuit",
     "element",
     "equal",
     "is_equal",
