@@ -23,7 +23,6 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - 可逆な`SparseSet`
 - 可逆なドメインを持つ`IntVar`と`BoolVar`
 - 状態管理を所有する`Solver`（制約伝播キューは未移植）
-- PyO3境界を探索中に往復しない、TSP比較用の粗粒度branch-and-bound探索
 - 非ゼロwordを可逆なprefixで管理する`StateSparseBitSet`
 - 可逆な購読リストとしての`StateStack`
 - 可逆状態と可逆データ構造をまとめる`state` package
@@ -160,8 +159,6 @@ StateManager
   互換性のためトップレベル`minicp`はPython版を指し、`minicp._rust`はPyO3の内部APIとする。
 - Rust名前空間では移植済みのAPIだけを公開し、未移植機能をPythonへ暗黙に
   フォールバックさせない。これにより、どちらの実装を学習・計測しているかを明確にする。
-- 汎用Rust制約エンジンの完成前に速度比較できるよう、TSPは一時的に専用の粗粒度APIも持つ。
-  これは`Circuit`、`Element1D`、`Sum`、DFSを個別移植したことには数えず、後の比較基準とする。
 - `StateManager`、`StateInt`と、それらに依存する`SparseSet`、
   `StateSparseBitSet`は`state` packageへまとめる。
 - 制約は`constraints` packageで概念ごとのmoduleに分け、基底クラスだけを`base`に置く。

@@ -104,10 +104,6 @@ uv run python notebooks/circuit.py
 uv run python notebooks/tsp.py
 ```
 
-`notebooks/tsp.py`の`BACKEND`を`"python"`または`"rust"`へ変更すると、同じ座標と
-時間制限で実装を比較できます。Rust版は現在、探索中にPyO3境界を往復しないTSP専用の
-粗粒度APIです。汎用のRust制約伝播エンジンは引き続き移植途中です。
-
 エディタでは各ファイルを開き、セル単位で実行すると制約伝播前後の状態を
 途中で確認できます。
 
