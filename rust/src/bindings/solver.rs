@@ -263,6 +263,47 @@ pub(crate) fn equal(x: PyRef<'_, PyIntVar>, y: PyRef<'_, PyIntVar>) -> PyResult<
     })
 }
 
+#[pyfunction]
+pub(crate) fn all_different(
+    py: Python<'_>,
+    variables: Vec<Py<PyIntVar>>,
+) -> PyResult<PyConstraint> {
+    let (solver, ids) = variable_ids(py, &variables)?;
+    let id = solver
+        .borrow_mut()
+        .new_all_different(ids)
+        .map_err(PyValueError::new_err)?;
+    Ok(PyConstraint { solver, id })
+}
+
+#[pyfunction]
+pub(crate) fn circuit(py: Python<'_>, variables: Vec<Py<PyIntVar>>) -> PyResult<PyConstraint> {
+    let (solver, ids) = variable_ids(py, &variables)?;
+    let id = solver
+        .borrow_mut()
+        .new_circuit(ids)
+        .map_err(PyValueError::new_err)?;
+    Ok(PyConstraint { solver, id })
+}
+
+fn variable_ids(
+    py: Python<'_>,
+    variables: &[Py<PyIntVar>],
+) -> PyResult<(SharedSolver, Vec<VariableId>)> {
+    let first = variables
+        .first()
+        .ok_or_else(|| PyValueError::new_err("at least one variable is required"))?
+        .borrow(py);
+    let solver = first.solver.clone();
+    let mut ids = Vec::with_capacity(variables.len());
+    for variable in variables {
+        let variable = variable.borrow(py);
+        ensure_same_solver(&solver, &variable.solver)?;
+        ids.push(variable.id);
+    }
+    Ok((solver, ids))
+}
+
 fn ensure_same_solver(left: &SharedSolver, right: &SharedSolver) -> PyResult<()> {
     if Rc::ptr_eq(left, right) {
         Ok(())

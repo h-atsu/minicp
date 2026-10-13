@@ -1,10 +1,13 @@
+mod algorithms;
 mod bindings;
 mod solver;
 mod sparse_set;
 mod state;
 mod state_sparse_set;
 
-use bindings::solver::{PyBoolVar, PyConstraint, PyIntVar, PySolver, equal, not_equal};
+use bindings::solver::{
+    PyBoolVar, PyConstraint, PyIntVar, PySolver, all_different, circuit, equal, not_equal,
+};
 use bindings::sparse_set::PySparseSet;
 use bindings::state::{PyStateInt, PyStateManager};
 use bindings::state_sparse_set::PyStateSparseSet;
@@ -24,6 +27,8 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyConstraint>()?;
     module.add_function(wrap_pyfunction!(not_equal, module)?)?;
     module.add_function(wrap_pyfunction!(equal, module)?)?;
+    module.add_function(wrap_pyfunction!(all_different, module)?)?;
+    module.add_function(wrap_pyfunction!(circuit, module)?)?;
     module.add("Inconsistency", module.py().get_type::<Inconsistency>())?;
     Ok(())
 }

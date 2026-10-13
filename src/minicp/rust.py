@@ -8,6 +8,8 @@ from minicp._rust import (
     Solver,
     StateInt,
     StateManager,
+    all_different,
+    circuit,
     equal,
     not_equal,
 )
@@ -22,6 +24,8 @@ __all__ = [
     "SparseSet",
     "StateInt",
     "StateManager",
+    "all_different",
+    "circuit",
     "equal",
     "not_equal",
 ]

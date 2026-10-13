@@ -4,6 +4,7 @@ use std::cell::RefCell;
 use std::collections::{HashSet, VecDeque};
 use std::rc::Rc;
 
+use crate::algorithms::supported_all_different_edges;
 use crate::state::{SharedStateManager, StateInt, StateManager, StateStack};
 use crate::state_sparse_set::StateSparseSet;
 
@@ -30,6 +31,16 @@ enum ConstraintKind {
     Equal {
         x: VariableId,
         y: VariableId,
+    },
+    AllDifferent {
+        variables: Vec<VariableId>,
+    },
+    Circuit {
+        variables: Vec<VariableId>,
+        destination: Vec<StateInt>,
+        origin: Vec<StateInt>,
+        length: Vec<StateInt>,
+        processed: Vec<StateInt>,
     },
 }
 
@@ -88,6 +99,33 @@ impl Solver {
         self.new_constraint(ConstraintKind::Equal { x, y })
     }
 
+    pub fn new_all_different(&mut self, variables: Vec<VariableId>) -> SolverResult<ConstraintId> {
+        if variables.is_empty() {
+            return Err("all-different requires at least one variable".into());
+        }
+        Ok(self.new_constraint(ConstraintKind::AllDifferent { variables }))
+    }
+
+    pub fn new_circuit(&mut self, variables: Vec<VariableId>) -> SolverResult<ConstraintId> {
+        if variables.len() < 2 {
+            return Err("circuit requires at least two successors".into());
+        }
+        let count = variables.len();
+        let make_integers = |values: Vec<i64>| {
+            values
+                .into_iter()
+                .map(|value| StateInt::new(self.state_manager.clone(), value))
+                .collect()
+        };
+        Ok(self.new_constraint(ConstraintKind::Circuit {
+            variables,
+            destination: make_integers((0..count as i64).collect()),
+            origin: make_integers((0..count as i64).collect()),
+            length: make_integers(vec![0; count]),
+            processed: make_integers(vec![0; count]),
+        }))
+    }
+
     fn new_constraint(&mut self, kind: ConstraintKind) -> ConstraintId {
         let id = self.constraints.len();
         self.constraints.push(Constraint {
@@ -118,6 +156,24 @@ impl Solver {
                     self.variables[x].on_domain_change.push(constraint);
                     self.variables[y].on_domain_change.push(constraint);
                 }
+                self.propagate(constraint)?;
+            }
+            ConstraintKind::AllDifferent { variables } => {
+                for variable in variables {
+                    self.variables[variable].on_domain_change.push(constraint);
+                }
+                self.propagate(constraint)?;
+            }
+            ConstraintKind::Circuit { variables, .. } => {
+                let count = variables.len() as i64;
+                for (node, variable) in variables.iter().copied().enumerate() {
+                    self.remove_below(variable, 0)?;
+                    self.remove_above(variable, count - 1)?;
+                    self.remove(variable, node as i64)?;
+                    self.variables[variable].on_fix.push(constraint);
+                }
+                let all_different = self.new_all_different(variables)?;
+                self.post(all_different)?;
                 self.propagate(constraint)?;
             }
         }
@@ -175,6 +231,51 @@ impl Solver {
                         self.fix(x, self.value(y)?)?;
                         self.deactivate(constraint);
                     }
+                }
+            }
+            ConstraintKind::AllDifferent { variables } => {
+                let adjacency: Vec<_> = variables
+                    .iter()
+                    .map(|variable| self.values(*variable))
+                    .collect();
+                let supported = supported_all_different_edges(&adjacency)
+                    .ok_or_else(|| "all-different has no matching".to_string())?;
+                for (variable, supported_values) in variables.iter().zip(supported) {
+                    for value in self.values(*variable) {
+                        if !supported_values.contains(&value) {
+                            self.remove(*variable, value)?;
+                        }
+                    }
+                }
+                if variables.iter().all(|variable| self.is_fixed(*variable)) {
+                    self.deactivate(constraint);
+                }
+            }
+            ConstraintKind::Circuit {
+                variables,
+                destination,
+                origin,
+                length,
+                processed,
+            } => {
+                for (node, variable) in variables.iter().copied().enumerate() {
+                    if self.is_fixed(variable) && processed[node].value() == 0 {
+                        let successor = self.value(variable)? as usize;
+                        let path_origin = origin[node].value() as usize;
+                        let path_destination = destination[successor].value() as usize;
+                        let path_length =
+                            length[path_origin].value() + length[successor].value() + 1;
+                        destination[path_origin].set(path_destination as i64);
+                        origin[path_destination].set(path_origin as i64);
+                        length[path_origin].set(path_length);
+                        processed[node].set(1);
+                        if path_length < variables.len() as i64 - 1 {
+                            self.remove(variables[path_destination], path_origin as i64)?;
+                        }
+                    }
+                }
+                if variables.iter().all(|variable| self.is_fixed(*variable)) {
+                    self.deactivate(constraint);
                 }
             }
         }
