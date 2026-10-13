@@ -68,3 +68,15 @@ def test_solver_rejects_an_objective_from_another_solver() -> None:
 
     with pytest.raises(ValueError, match="different solver"):
         second_solver.minimize(variable)
+
+
+def test_optimization_can_stop_at_a_time_limit() -> None:
+    solver = Solver()
+    variable = IntVar(solver, 0, 100)
+    objective = solver.minimize(variable)
+    search = DFSearch(solver, first_unfixed([variable]))
+
+    statistics = search.optimize(objective, time_limit=0)
+
+    assert not statistics.completed
+    assert objective.best_value is None

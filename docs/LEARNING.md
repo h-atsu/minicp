@@ -45,6 +45,7 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - 27個のAllDifferentで解くSudoku notebook
 - successor modelとsubtour除去を確認するCircuit notebook
 - fix-pointで目的変数の境界を更新する最小化・最大化目的関数
+- `solve`と`optimize`の秒単位の協調的な探索時間制限
 - Circuit、Element、Sum、branch-and-boundを組み合わせたTSP notebook
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
@@ -134,6 +135,8 @@ StateManager
 - 目的関数の最良値は探索状態とは別の通常の整数として保持する。解で境界を厳しくし、
   次のfix-pointで目的変数へ反映するため、探索状態をrestoreしてもbranch-and-boundの
   incumbentは残る。
+- 探索の時間制限は各探索ノードの入口で単調時計を確認する。時間切れはfailureに
+  数えず、`SearchStatistics.completed`で完全探索との違いを表す。
 - Javaの`Impl`クラスや不要なinterface階層は、そのままPythonへ移植しない。
 
 ## Important design decisions

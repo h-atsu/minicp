@@ -1,3 +1,5 @@
+import pytest
+
 from minicp import DFSearch, IntVar, Solver, first_unfixed, not_equal
 
 
@@ -47,3 +49,24 @@ def test_search_restores_root_domains() -> None:
     search.solve()
 
     assert all(set(queen.values()) == {0, 1, 2, 3} for queen in queens)
+
+
+def test_search_can_stop_at_a_time_limit() -> None:
+    solver = Solver()
+    variable = IntVar(solver, 0, 100)
+    search = DFSearch(solver, first_unfixed([variable]))
+
+    statistics = search.solve(time_limit=0)
+
+    assert not statistics.completed
+    assert statistics.solutions == 0
+    assert statistics.elapsed_seconds >= 0
+    assert set(variable.values()) == set(range(101))
+
+
+def test_search_rejects_a_negative_time_limit() -> None:
+    solver = Solver()
+    search = DFSearch(solver, list)
+
+    with pytest.raises(ValueError, match="non-negative"):
+        search.solve(time_limit=-1)
