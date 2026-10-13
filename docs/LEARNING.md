@@ -21,8 +21,6 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - 素朴なtrailing方式の`StateManager`
 - `StateInt`
 - 可逆な`SparseSet`
-- 可逆なドメインを持つ`IntVar`と`BoolVar`
-- 状態管理を所有する`Solver`（制約伝播キューは未移植）
 - 非ゼロwordを可逆なprefixで管理する`StateSparseBitSet`
 - 可逆な購読リストとしての`StateStack`
 - 可逆状態と可逆データ構造をまとめる`state` package
@@ -66,6 +64,10 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 - 素朴なtrailing方式の`StateManager`
 - `StateInt`
 - 可逆な`SparseSet`
+- 可逆なドメインを持つ`IntVar`と`BoolVar`
+- 変数と制約をIDで所有するarena型`Solver`
+- 可逆な変数event購読と重複scheduleを防ぐ伝播キュー
+- `NotEqual`とdomain-consistentな`Equal`
 - `minicp.rust`から公開する、Python版と共通名の状態管理API
 - Python版との共通テストで、状態保存・復元と集合操作を比較
 

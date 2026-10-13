@@ -68,6 +68,34 @@ pub struct StateInt {
     id: usize,
 }
 
+pub struct StateStack<T> {
+    items: Vec<T>,
+    size: StateInt,
+}
+
+impl<T: Clone> StateStack<T> {
+    pub fn new(manager: SharedStateManager) -> Self {
+        Self {
+            items: Vec::new(),
+            size: StateInt::new(manager, 0),
+        }
+    }
+
+    pub fn push(&mut self, item: T) {
+        let index = self.size.value() as usize;
+        if index == self.items.len() {
+            self.items.push(item);
+        } else {
+            self.items[index] = item;
+        }
+        self.size.set(index as i64 + 1);
+    }
+
+    pub fn values(&self) -> Vec<T> {
+        self.items[..self.size.value() as usize].to_vec()
+    }
+}
+
 impl StateInt {
     pub fn new(manager: SharedStateManager, value: i64) -> Self {
         let id = manager.borrow_mut().create_int(value);
