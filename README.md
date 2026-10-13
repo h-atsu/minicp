@@ -83,6 +83,9 @@ N-Queensでは各列の女王の行番号を整数変数で表し、同じ行と
 ```console
 uv run python notebooks/n_queens.py
 uv run python notebooks/subset_sum_problem.py
+uv run python notebooks/stable_matching.py
+uv run python notebooks/sudoku.py
+uv run python notebooks/circuit.py
 ```
 
 エディタでは各ファイルを開き、セル単位で実行すると制約伝播前後の状態を

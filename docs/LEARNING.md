@@ -10,9 +10,9 @@ MiniCPの講義を通して、制約プログラミングソルバーの動作�
 
 ## Current course progress
 
-MiniCPの講義05まで視聴済み。実装は講義02の中核である可逆状態、ドメイン、
+MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆状態、ドメイン、
 変数通知、制約伝播、fix-point、深さ優先探索を使ってN-Queensを解ける段階から、
-講義03以降で使う境界更新APIの追加へ進んでいる。
+講義06のCircuit制約へ進んでいる。
 
 ## Implemented
 
@@ -40,6 +40,10 @@ MiniCPの講義05まで視聴済み。実装は講義02の中核である可逆�
 - 全変数ペアを`NotEqual`へ分解する`AllDifferentBinary`
 - maximum matchingとalternating graphでdomain consistencyを実現する`AllDifferentDC`
 - 制約から独立した`algorithms` packageのmaximum matching、SCC、到達探索
+- `AllDifferentDC`と可逆なパス情報でsubtourを除去する`Circuit`
+- AllDifferentとCompact Tableで安定性を表すStable Matching notebook
+- 27個のAllDifferentで解くSudoku notebook
+- successor modelとsubtour除去を確認するCircuit notebook
 - fixed prefixと可逆な集計値を使うbound-consistentな`Sum`
 - 合計を表す結果変数を生成して制約をpostする`sum_var`
 - binary変数、Scale View、`Sum`を組み合わせたSubset Sum notebook
@@ -123,6 +127,8 @@ StateManager
   `AllDifferentDC`には交互グラフの構築と枝刈り判断を残す。
 - `all_different`はdomain-consistentな`AllDifferentDC`を生成する。弱い分解と比較する
   場合は`AllDifferentBinary`を直接使う。
+- `Circuit`は`AllDifferentDC`を内部でpostし、固定辺から作られるパスの始点、終点、
+  長さだけを可逆に保持する。全頂点を含む前に閉じるsubtourを除去する。
 - Javaの`Impl`クラスや不要なinterface階層は、そのままPythonへ移植しない。
 
 ## Important design decisions
@@ -144,10 +150,11 @@ StateManager
 
 ## Possible next steps
 
-講義05の次の候補:
+講義06の次の候補:
 
-1. fixed prefixを使うforward checking版を比較用に追加する
-2. maximum matchingを増分更新し、作り直す参照実装と比較する
+1. 目的変数とbranch-and-boundによる最小化
+2. TSPモデルとLarge Neighborhood Search
+3. 講義07のCumulative制約
 
 講義02の補完候補として、`StateManager`のcontext manager、同一探索レベルでの
 trail重複記録の抑制、汎用branching、`Copier`も残っている。
