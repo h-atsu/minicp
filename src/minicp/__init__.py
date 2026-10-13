@@ -42,6 +42,10 @@ from minicp.variable import (
     plus,
 )
 
+# The top-level API remains the Python backend for backward compatibility.
+# Explicit backend selection is available as ``minicp.python`` and
+# ``minicp.rust``.
+
 __all__ = [
     "AllDifferentBinary",
     "AllDifferentDC",

@@ -2,7 +2,21 @@
 
 MiniCPの講義を参考にしながら、制約プログラミングソルバーをPythonとRustで実装する学習用プロジェクトです。
 
-まず読みやすいPython実装を作り、同じ振る舞いをする部品をRustとPyO3で実装して比較します。現在は、バックトラック可能な整数状態とSparse Setを実装しています。
+まず読みやすいPython実装を作り、同じ振る舞いをする部品をRustとPyO3で実装して比較します。Python版は講義10までの主要機能、Rust版はバックトラック可能な整数状態とSparse Setを実装しています。
+
+バックエンドを明示する場合は、同じ名前を持つ名前空間を選びます。
+
+```python
+from minicp import python as cp
+# from minicp import rust as cp
+
+manager = cp.StateManager()
+domain = cp.SparseSet(manager, minimum=2, maximum=6)
+```
+
+既存コードとの互換性のため、`from minicp import Solver`のようなトップレベルAPIは
+Pythonバックエンドを指します。Rust名前空間には、Python版と同じ振る舞いまで移植・検証できた
+APIだけを公開します。そのため、現時点の`minicp.rust`はソルバー全体ではなく状態管理層だけです。
 
 ## セットアップ
 
@@ -35,10 +49,10 @@ uv run pytest
 uv run maturin develop --release
 ```
 
-Rust拡張を直接読み込めることは、次のコマンドで確認できます。
+Rustバックエンドを読み込めることは、次のコマンドで確認できます。
 
 ```console
-uv run python -c "from minicp._rust import SparseSet; print(SparseSet(1, 3).values())"
+uv run python -c "from minicp import rust as cp; m = cp.StateManager(); print(cp.SparseSet(m, 1, 3).values())"
 ```
 
 期待される出力は次のとおりです。
@@ -94,12 +108,14 @@ uv run python notebooks/tsp.py
 
 ## Rust版Sparse Set
 
-Rust版は内部実装を明示するため、非公開モジュール`minicp._rust`から利用します。現時点では基本的な集合操作のみを実装し、状態の保存・復元はまだPython版だけが対応しています。
+Rust版も`StateManager`と連携し、Python版と同じAPIで変更を保存・復元できます。
 
 ```python
-from minicp._rust import SparseSet
+from minicp import rust as cp
 
-domain = SparseSet(minimum=2, maximum=6)
+manager = cp.StateManager()
+domain = cp.SparseSet(manager, minimum=2, maximum=6)
+manager.save()
 domain.remove(4)
 
 assert not domain.contains(4)
@@ -107,9 +123,13 @@ assert domain.size == 4
 assert domain.min == 2
 assert domain.max == 6
 assert set(domain.values()) == {2, 3, 5, 6}
+
+manager.restore()
+assert domain.contains(4)
 ```
 
-通常のコードではPython版を`minicp`から利用します。`minicp._rust`は挙動の比較や実装実験のための内部APIです。
+`minicp._rust`はPyO3の低レベルモジュールであり、通常のコードでは
+`minicp.python`または`minicp.rust`を利用します。
 
 ## テスト
 
@@ -124,6 +144,8 @@ Python版とRust版の共通テストにより、以下の操作が同じ結果�
 - `size`
 - `min` / `max`
 - `values()`
+- `save()` / `restore()`
+- `remove_below(value)` / `remove_above(value)`
 
 静的チェックは次のコマンドで実行できます。
 

@@ -61,9 +61,11 @@ MiniCPの講義10まで視聴済み。実装は講義02の中核である可逆�
 
 ### Rust
 
-- PyO3で公開する基本的な`SparseSet`
-- Python版との共通テストで、基本的な集合操作を比較
-- Rust版の状態保存・復元は未実装
+- 素朴なtrailing方式の`StateManager`
+- `StateInt`
+- 可逆な`SparseSet`
+- `minicp.rust`から公開する、Python版と共通名の状態管理API
+- Python版との共通テストで、状態保存・復元と集合操作を比較
 
 ## Current architecture
 
@@ -142,6 +144,10 @@ StateManager
 ## Important design decisions
 
 - Python実装を読みやすい参照実装とし、Rustは理解後の移植先とする。
+- バックエンドを明示するときは`minicp.python`と`minicp.rust`を使う。既存コードとの
+  互換性のためトップレベル`minicp`はPython版を指し、`minicp._rust`はPyO3の内部APIとする。
+- Rust名前空間では移植済みのAPIだけを公開し、未移植機能をPythonへ暗黙に
+  フォールバックさせない。これにより、どちらの実装を学習・計測しているかを明確にする。
 - `StateManager`、`StateInt`と、それらに依存する`SparseSet`、
   `StateSparseBitSet`は`state` packageへまとめる。
 - 制約は`constraints` packageで概念ごとのmoduleに分け、基底クラスだけを`base`に置く。
