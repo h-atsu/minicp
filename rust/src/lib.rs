@@ -3,11 +3,13 @@ mod solver;
 mod sparse_set;
 mod state;
 mod state_sparse_set;
+mod tsp;
 
 use bindings::solver::{PyBoolVar, PyIntVar, PySolver};
 use bindings::sparse_set::PySparseSet;
 use bindings::state::{PyStateInt, PyStateManager};
 use bindings::state_sparse_set::PyStateSparseSet;
+use bindings::tsp::{PyTspResult, PyTspStatistics, solve_tsp};
 use pyo3::prelude::*;
 
 pyo3::create_exception!(_rust, Inconsistency, pyo3::exceptions::PyException);
@@ -22,5 +24,8 @@ fn _rust(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_class::<PyIntVar>()?;
     module.add_class::<PyBoolVar>()?;
     module.add("Inconsistency", module.py().get_type::<Inconsistency>())?;
+    module.add_class::<PyTspStatistics>()?;
+    module.add_class::<PyTspResult>()?;
+    module.add_function(wrap_pyfunction!(solve_tsp, module)?)?;
     Ok(())
 }
